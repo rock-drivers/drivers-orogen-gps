@@ -1,0 +1,28 @@
+name 'dgps'
+version 0.1
+
+using_library 'dgps'
+import_types_from 'dgpstypes.hh'
+
+task_context 'Task' do
+	needs_configuration
+	fd_driven
+	
+	property("portName", "/std/string").
+        doc "the device file used to connect to the gps"
+		
+	command("getSatelliteInformation").
+        doc("get the Satellite information")
+
+	output_port('position_and_errors', '/gps/FullInfo')
+	output_port('satellite', '/gps/SatelliteInfo')
+end
+
+
+static_deployment do
+    gps_task = task("Task")
+
+    if !corba_enabled?
+        browse gps_task
+    end
+end
