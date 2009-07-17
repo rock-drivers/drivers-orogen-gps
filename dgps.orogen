@@ -2,26 +2,29 @@ name 'dgps'
 version 0.1
 
 using_library 'dgps'
+import_types_from 'dfki'
 import_types_from 'dgpstypes.hh'
 
 task_context 'Task' do
 	needs_configuration
 	fd_driven
 	
-	property("portName", "/std/string").
-        doc "the device file used to connect to the gps"
+	property("device", "/std/string").
+            doc "the device file used to connect to the gps"
+        property("port",   "/std/string").
+            doc "the board port (A, B, C or D) at which we are connected"
+        property("period",   "double").
+            doc "the update period"
 		
-	command("getSatelliteInformation").
-        doc("get the Satellite information")
-
-	output_port('position_and_errors', '/gps/FullInfo')
-	output_port('satellite', '/gps/SatelliteInfo')
+	output_port('solution', '/gps/Solution')
+	# output_port('satellite', '/gps/SatelliteInfo')
 end
 
 
 static_deployment do
     gps_task = task("Task")
 
+    add_default_logger
     if !corba_enabled?
         browse gps_task
     end

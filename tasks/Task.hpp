@@ -20,6 +20,7 @@ namespace dgps {
 	friend class TaskBase;
     protected:
 
+        DFKI::Time last_update;
 
 
     public:

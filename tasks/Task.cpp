@@ -13,64 +13,62 @@ RTT::FileDescriptorActivity* Task::getFileDescriptorActivity()
 Task::Task(std::string const& name)
     : TaskBase(name)
 {
-
 }
 
-/// The following lines are template definitions for the various state machine
-// hooks defined by Orocos::RTT. See Task.hpp for more detailed
-// documentation about them.
+bool Task::configureHook()
+{
+    if (!gps.open(_device))
+        return false;
 
- bool Task::getSatelliteInformation()
- {
-	_satellite.write(gps.dataSatellite);
+    // start device
+    getFileDescriptorActivity()->watch(gps.getFileDescriptor());
     return true;
- }
-
- bool Task::isgetSatelliteInformationCompleted()
- {
-    return true;
- }
-
- bool Task::configureHook()
- {
-	cerr << "device open on port :" << _portName << endl;
-	if (!gps.open(_portName))
-	//if (!gps.open("/dev/ttyUSB0"))
-		 return false;
-
-	 // start device
-	 getFileDescriptorActivity()->watch(gps.getFileDescriptor());
-	 return true;
- }
+}
 
 
- bool Task::startHook()
- {
-	 // start GPS information looping
-	 return gps.setPeriodicData();
- }
+bool Task::startHook()
+{
+    // start GPS information looping
+    last_update = DFKI::Time();
+    return gps.setPeriodicData(_port, _period);
+}
 
- void Task::updateHook()
- {
-	 gps.collectPeriodicData();
-	 if( gps.isOKtoReleaseData()) {
-		cerr << "Writing data to output port" << endl;
-		_position_and_errors.write(gps.data);
-	}
+void Task::updateHook()
+{
+    gps.collectPeriodicData();
 
- }
+    if (last_update < gps.position.timestamp && gps.position.timestamp == gps.errors.timestamp)
+    {
+        gps::Solution solution;
+        solution.timestamp                    = gps.position.timestamp;
+        solution.latitude                     = gps.position.latitude;
+        solution.longitude                    = gps.position.longitude;
+        solution.positionType                 = gps.position.positionType;
+        solution.noOfSatellites               = gps.position.noOfSatellites;
+        solution.altitude                     = gps.position.altitude;
+        solution.geoidalSeparation            = gps.position.geoidalSeparation;
+        solution.ageOfDifferentialCorrections = gps.position.ageOfDifferentialCorrections;
+        solution.deviationLatitude            = gps.errors.deviationLatitude;
+        solution.deviationLongitude           = gps.errors.deviationLongitude;
+        solution.deviationAltitude            = gps.errors.deviationAltitude;
+        _solution.write(solution);
+    }
+
+//if (_satellite.connected())
+//        _satellite.write(gps.satellites);
+}
 
 // void Task::errorHook()
 // {
 // }
 
- void Task::stopHook()
- {
-	 gps.stopPeriodicData();
- }
+void Task::stopHook()
+{
+    gps.stopPeriodicData();
+}
 
- void Task::cleanupHook()
- {
-	 gps.close();
- }
+void Task::cleanupHook()
+{
+    gps.close();
+}
 
