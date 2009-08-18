@@ -17,7 +17,7 @@ Task::Task(std::string const& name)
 
 bool Task::configureHook()
 {
-    if (!gps.open(_device))
+    if (!gps.openRover(_device))
         return false;
 
     // start device
@@ -30,6 +30,7 @@ bool Task::startHook()
 {
     // start GPS information looping
     last_update = DFKI::Time();
+    gps.setRTKInputPort("B");
     return gps.setPeriodicData(_port, _period);
 }
 
