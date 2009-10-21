@@ -15,18 +15,16 @@ namespace dgps {
     {
 	private:
 		DGPS gps;
-
-
-	friend class TaskBase;
+        friend class TaskBase;
     protected:
 
         DFKI::Time last_update;
-	int openSocket(std::string const& port);
-	std::auto_ptr<file_guard> guard_socket;
-	int correction_socket;
+        int openSocket(std::string const& port);
+        int correction_socket;
 
     public:
         Task(std::string const& name = "dgps::Task");
+        ~Task();
 
         RTT::FileDescriptorActivity* getFileDescriptorActivity();
 

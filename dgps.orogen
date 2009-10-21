@@ -13,7 +13,7 @@ task_context 'Task' do
             doc "the device file used to connect to the gps"
         property("port",   "/std/string").
             doc "the board port (A, B, C or D) at which we are connected"
-        property("correctionPort",   "/std/string").
+        property("correction_port",   "/std/string").
             doc "the port (A, B, C, D or a number) at which the board gets correction data note, number means it is getting the correction data s UDP packets to port X"
 
         property("period",   "double").
