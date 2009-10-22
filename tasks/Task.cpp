@@ -74,41 +74,46 @@ int Task::openSocket(std::string const& port)
 bool Task::configureHook()
 {
     try {
-    if (!gps.openRover(_device))
-    {
-        RTT::log(Error) << "failed to initialize rover mode" << RTT::endlog();
-        return false;
-    }
+        if (!gps.openRover(_device))
+        {
+            RTT::log(Error) << "failed to initialize rover mode" << RTT::endlog();
+            return false;
+        }
 
-    file_guard socket;
-    string correction_input_port = _correction_port;
+        file_guard socket;
+        string correction_input_port = _correction_port;
 
-    if (correction_input_port.size() > 1 || correction_input_port.find_first_of("ABC") != 0) {
-	//we seem to use UDP
-	//create a socket to recevie the data
-        int fd = openSocket(correction_input_port);
-	if (fd < 0)
-	    return false;
-	
-        socket.reset(fd);
-	
-	//and tell the board, we are sending the correction data
-        correction_input_port = _port;
-    }
-        
-    if(!gps.setRTKInputPort(correction_input_port))
-    {
-        RTT::log(Error) << "failed to set RTK input port" << RTT::endlog();
-	return false;
-    }
-    
-    if (socket.get() != -1)
-    {
-        correction_socket = socket.release();
-        getFileDescriptorActivity()->watch(correction_socket);
-    }
-    // start device
-    getFileDescriptorActivity()->watch(gps.getFileDescriptor());
+        if (correction_input_port.size() > 1 || correction_input_port.find_first_of("ABC") != 0)
+        {
+            //we seem to use UDP
+            //create a socket to recevie the data
+            int fd = openSocket(correction_input_port);
+            if (fd < 0)
+                return false;
+            
+            socket.reset(fd);
+            
+            //and tell the board, we are sending the correction data
+            correction_input_port = _port;
+        }
+
+        gps.setReceiverDynamics(DGPS::ADAPTIVE);
+            
+        if(!gps.setRTKInputPort(correction_input_port))
+        {
+            RTT::log(Error) << "failed to set RTK input port" << RTT::endlog();
+            return false;
+        }
+
+        if (socket.get() != -1)
+        {
+            correction_socket = socket.release();
+            getFileDescriptorActivity()->watch(correction_socket);
+        }
+
+        // start device
+        getFileDescriptorActivity()->watch(gps.getFileDescriptor());
+
     } catch(timeout_error) {
         RTT::log(Error) << "timeout during board configuration" << RTT::endlog();
         return false;
@@ -204,10 +209,6 @@ void Task::updateHook()
         corrections_rx = 0;
         gps.resetStats();
     }
-
-
-//if (_satellite.connected())
-//        _satellite.write(gps.satellites);
 }
 
 // void Task::errorHook()
