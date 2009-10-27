@@ -4,6 +4,8 @@
 #include "dgps/TaskBase.hpp"
 #include "dgps.hh"
 
+class OGRCoordinateTransformation;
+
 namespace RTT
 {
     class FileDescriptorActivity;
@@ -13,8 +15,9 @@ namespace RTT
 namespace dgps {
 	class Task : public TaskBase
     {
-	private:
-		DGPS gps;
+    private:
+	DGPS gps;
+	OGRCoordinateTransformation *coTransform;
         friend class TaskBase;
     protected:
 

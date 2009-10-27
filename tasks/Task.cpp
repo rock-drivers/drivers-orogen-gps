@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <ogr_spatialref.h>
+
 using namespace std;
 
 using namespace dgps;
@@ -19,6 +21,19 @@ RTT::FileDescriptorActivity* Task::getFileDescriptorActivity()
 Task::Task(std::string const& name)
     : TaskBase(name)
 {
+
+#define UTM_ZONE 32
+#define UTM_NORTH TRUE
+
+    OGRSpatialReference oSourceSRS;
+    OGRSpatialReference oTargetSRS;
+    
+    oSourceSRS.SetWellKnownGeogCS( "WGS84" );
+    oTargetSRS.SetWellKnownGeogCS( "WGS84" );
+    oTargetSRS.SetUTM( UTM_ZONE, UTM_NORTH );
+
+    coTransform = OGRCreateCoordinateTransformation( &oSourceSRS,
+	    &oTargetSRS );
 }
 
 Task::~Task() {}
@@ -193,6 +208,17 @@ void Task::updateHook()
                 solution.deviationLongitude           = gps.errors.deviationLongitude;
                 solution.deviationAltitude            = gps.errors.deviationAltitude;
                 _solution.write(solution);
+		
+		double la = solution.latitude;
+		double lo = solution.longitude;
+		double alt = solution.altitude;
+		
+		coTransform->Transform(1, &la, &lo, &alt);
+		DFKI::Vector3 pos;
+		pos.x() = la;
+		pos.y() = lo;
+		pos.z() = alt;
+		_positionUTM.write(pos);
             }
         }
         catch(timeout_error) {

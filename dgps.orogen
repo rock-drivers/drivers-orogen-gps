@@ -20,6 +20,7 @@ task_context 'Task' do
             doc "the update period"
 		
 	output_port('solution', '/gps/Solution')
+	output_port('positionUTM', '/DFKI/Vector3')
 	# output_port('satellite', '/gps/SatelliteInfo')
 end
 
