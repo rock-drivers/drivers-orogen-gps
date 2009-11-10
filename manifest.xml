@@ -12,5 +12,7 @@
     <license>GPL v2 or later</license>
 
     <rosdep name="gdal" />
+    <!-- PROJ.4 is required by GDAL to support long/lat to UTM convertions -->
+    <rosdep name="proj" />
 </package>
 
