@@ -25,15 +25,6 @@ Task::Task(std::string const& name)
 #define UTM_ZONE 32
 #define UTM_NORTH TRUE
 
-    OGRSpatialReference oSourceSRS;
-    OGRSpatialReference oTargetSRS;
-    
-    oSourceSRS.SetWellKnownGeogCS( "WGS84" );
-    oTargetSRS.SetWellKnownGeogCS( "WGS84" );
-    oTargetSRS.SetUTM( UTM_ZONE, UTM_NORTH );
-
-    coTransform = OGRCreateCoordinateTransformation( &oSourceSRS,
-	    &oTargetSRS );
 }
 
 Task::~Task() {}
@@ -88,6 +79,23 @@ int Task::openSocket(std::string const& port)
 
 bool Task::configureHook()
 {
+    // setup conversion from WGS84 to UTM
+    OGRSpatialReference oSourceSRS;
+    OGRSpatialReference oTargetSRS;
+    
+    oSourceSRS.SetWellKnownGeogCS( "WGS84" );
+    oTargetSRS.SetWellKnownGeogCS( "WGS84" );
+    oTargetSRS.SetUTM( _utm_zone, _utm_north );
+
+    coTransform = OGRCreateCoordinateTransformation( &oSourceSRS,
+	    &oTargetSRS );
+
+    if( coTransform == NULL )
+    {
+	RTT::log(Error) << "failed to initialize CoordinateTransform UTM_ZONE:" << _utm_zone << " UTM_NORTH:" << _utm_north << RTT::endlog();
+	return false;
+    }
+
     try {
         if (!gps.openRover(_device))
         {
@@ -187,10 +195,6 @@ void Task::updateHook()
                 << (gps.position.timestamp == gps.errors.timestamp) << " "
                 << (last_update < gps.position.timestamp) << std::endl;
 
-            // the MB500 sometime reports weird positions, for which the
-            // positoin type is greater than 4 (RTK_FLOAT)
-            //
-            // Just ignore those
             if (last_update < gps.position.timestamp && gps.position.timestamp == gps.errors.timestamp)
             {
                 last_update = gps.position.timestamp;
@@ -209,16 +213,24 @@ void Task::updateHook()
                 solution.deviationAltitude            = gps.errors.deviationAltitude;
                 _solution.write(solution);
 		
-		double la = solution.latitude;
-		double lo = solution.longitude;
-		double alt = solution.altitude;
-		
-		coTransform->Transform(1, &la, &lo, &alt);
-		DFKI::Vector3 pos;
-		pos.x() = la;
-		pos.y() = lo;
-		pos.z() = alt;
-		_positionUTM.write(pos);
+		// if there is a valid reading, then write it to position readings port
+		if( gps.position.positionType != gps::NO_SOLUTION )
+		{ 
+		    double la = solution.latitude;
+		    double lo = solution.longitude;
+		    double alt = solution.altitude;
+
+		    coTransform->Transform(1, &la, &lo, &alt);
+		    DFKI::PositionReading pos;
+		    pos.stamp = gps.position.timestamp;
+		    pos.position.x() = la - _origin.value().x();
+		    pos.position.y() = lo - _origin.value().y();
+		    pos.position.z() = alt - _origin.value().z();
+		    pos.error.x() = gps.errors.deviationLatitude;
+		    pos.error.y() = gps.errors.deviationLongitude;
+		    pos.error.z() = gps.errors.deviationAltitude;
+		    _position_readings.write(pos);
+		}
             }
         }
         catch(timeout_error) {
