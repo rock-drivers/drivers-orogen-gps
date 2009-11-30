@@ -2,7 +2,7 @@ name 'dgps'
 version 0.1
 
 using_library 'dgps'
-import_types_from 'dfki'
+import_types_from 'base'
 import_types_from 'dgpstypes.hh'
 
 task_context 'Task' do
@@ -23,11 +23,11 @@ task_context 'Task' do
 	    doc "UTM zone for conversion of WGS84 to UTM"
 	property("utm_north", "int", 1).
 	    doc "UTM north for conversion of WGS84 to UTM"
-	property("origin", "/DFKI/Vector3").
+	property("origin", "/base/Vector3").
 	    doc "Origin in UTM coordinates, that is used for position readings." 
 		
 	output_port('solution', '/gps/Solution')
-	output_port('position_readings', '/DFKI/PositionReading')
+	output_port('position_readings', '/base/PositionReading')
 	# output_port('satellite', '/gps/SatelliteInfo')
 end
 

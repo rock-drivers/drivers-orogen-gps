@@ -21,7 +21,7 @@ namespace dgps {
         friend class TaskBase;
     protected:
 
-        DFKI::Time last_update;
+        base::Time last_update;
         int openSocket(std::string const& port);
         int correction_socket;
 

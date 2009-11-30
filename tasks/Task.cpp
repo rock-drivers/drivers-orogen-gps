@@ -148,7 +148,7 @@ bool Task::configureHook()
 bool Task::startHook()
 {
     // start GPS information looping
-    last_update = DFKI::Time();
+    last_update = base::Time();
      
     return gps.setPeriodicData(_port, _period);
 }
@@ -156,12 +156,12 @@ bool Task::startHook()
 void Task::updateHook()
 {
     char buffer[1024];
-    static DFKI::Time last_rate_display; // to display correction byterate
+    static base::Time last_rate_display; // to display correction byterate
     static int corrections_rx = 0;
 
     if (last_rate_display.isNull())
-        last_rate_display= DFKI::Time::now();
-    DFKI::Time now = DFKI::Time::now();
+        last_rate_display= base::Time::now();
+    base::Time now = base::Time::now();
     
     RTT::FileDescriptorActivity* fd_activity =
         dynamic_cast<RTT::FileDescriptorActivity*>(getActivity().get());
@@ -171,11 +171,11 @@ void Task::updateHook()
 
     if (correction_socket != -1 && fd_activity->isUpdated(correction_socket))
     {
-        //std::cout << DFKI::Time::now().toMilliseconds() << " data is available on correction input" << std::endl;
+        //std::cout << base::Time::now().toMilliseconds() << " data is available on correction input" << std::endl;
         int rd = read(correction_socket, buffer, 1024);
         if (rd > 0)
         {
-            //std::cout << DFKI::Time::now().toMilliseconds() << " got " << rd << " bytes of correction data" << std::endl;
+            //std::cout << base::Time::now().toMilliseconds() << " got " << rd << " bytes of correction data" << std::endl;
             gps.writeCorrectionData(buffer, rd, 1000);
             corrections_rx += rd;
         }
@@ -184,10 +184,10 @@ void Task::updateHook()
     
     if (fd_activity->isUpdated(gps.getFileDescriptor()))
     {
-        //std::cout << DFKI::Time::now().toMilliseconds() << " data is available on GPS file descriptor" << std::endl;
+        //std::cout << base::Time::now().toMilliseconds() << " data is available on GPS file descriptor" << std::endl;
         try {
             gps.collectPeriodicData();
-            std::cout << DFKI::Time::now().toMilliseconds() << " "
+            std::cout << base::Time::now().toMilliseconds() << " "
                 << gps.position.positionType << " "
                 << last_update.toMilliseconds() << " "
                 << gps.position.timestamp.toMilliseconds() << " "
@@ -221,7 +221,7 @@ void Task::updateHook()
 		    double alt = solution.altitude;
 
 		    coTransform->Transform(1, &la, &lo, &alt);
-		    DFKI::PositionReading pos;
+		    base::PositionReading pos;
 		    pos.stamp = gps.position.timestamp;
 		    pos.position.x() = la - _origin.value().x();
 		    pos.position.y() = lo - _origin.value().y();
@@ -234,15 +234,15 @@ void Task::updateHook()
             }
         }
         catch(timeout_error) {
-            std::cout << DFKI::Time::now().toMilliseconds() << " got timeout on reading GPS data" << std::endl;
+            std::cout << base::Time::now().toMilliseconds() << " got timeout on reading GPS data" << std::endl;
         }
-        //std::cout << DFKI::Time::now().toMilliseconds() << " finished reading GPS data" << std::endl;
+        //std::cout << base::Time::now().toMilliseconds() << " finished reading GPS data" << std::endl;
     }
 
     float duration = (now -last_rate_display).toSeconds();
     if (duration > 1)
     {
-        std::cout << DFKI::Time::now().toMilliseconds() << " good: " << gps.getStats().good_rx << ", bad: " << gps.getStats().bad_rx << ", corrections: " << corrections_rx / duration << " bytes/s" << std::endl;
+        std::cout << base::Time::now().toMilliseconds() << " good: " << gps.getStats().good_rx << ", bad: " << gps.getStats().bad_rx << ", corrections: " << corrections_rx / duration << " bytes/s" << std::endl;
         last_rate_display= now;
         corrections_rx = 0;
         gps.resetStats();
