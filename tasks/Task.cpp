@@ -155,9 +155,8 @@ bool Task::configureHook()
 
 bool Task::startHook()
 {
-    // start GPS information looping
     last_update = DFKI::Time();
-     
+    last_constellation_update = DFKI::Time();
     return gps.setPeriodicData(_port, _period);
 }
 
@@ -192,16 +191,8 @@ void Task::updateHook()
     
     if (fd_activity->isUpdated(gps.getFileDescriptor()))
     {
-        //std::cout << DFKI::Time::now().toMilliseconds() << " data is available on GPS file descriptor" << std::endl;
         try {
             gps.collectPeriodicData();
-            std::cout << DFKI::Time::now().toMilliseconds() << " "
-                << gps.position.positionType << " "
-                << last_update.toMilliseconds() << " "
-                << gps.position.timestamp.toMilliseconds() << " "
-                << gps.errors.timestamp.toMilliseconds() << " "
-                << (gps.position.timestamp == gps.errors.timestamp) << " "
-                << (last_update < gps.position.timestamp) << std::endl;
 
             if (last_update < gps.position.timestamp && gps.position.timestamp == gps.errors.timestamp)
             {
@@ -239,6 +230,16 @@ void Task::updateHook()
 		    pos.error.z() = gps.errors.deviationAltitude;
 		    _position_readings.write(pos);
 		}
+            }
+
+            if (gps.solutionQuality.timestamp > last_constellation_update &&
+                    gps.satellites.timestamp > last_constellation_update)
+            {
+                ConstellationInfo info;
+                info.quality    = gps.solutionQuality;
+                info.satellites = gps.satellites;
+                _constellation.write(info);
+                last_constellation_update = DFKI::Time::now();
             }
         }
         catch(timeout_error) {

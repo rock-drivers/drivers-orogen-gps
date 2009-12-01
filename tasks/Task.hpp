@@ -22,6 +22,7 @@ namespace dgps {
     protected:
 
         DFKI::Time last_update;
+        DFKI::Time last_constellation_update;
         int openSocket(std::string const& port);
         int correction_socket;
 

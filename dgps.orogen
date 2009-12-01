@@ -33,7 +33,7 @@ task_context 'Task' do
 		
 	output_port('solution', '/gps/Solution')
 	output_port('position_readings', '/DFKI/PositionReading')
-	# output_port('satellite', '/gps/SatelliteInfo')
+	output_port('constellation', '/dgps/ConstellationInfo')
 end
 
 
