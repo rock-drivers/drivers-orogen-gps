@@ -22,9 +22,10 @@ Task::Task(std::string const& name)
     : TaskBase(name)
 {
 
-#define UTM_ZONE 32
-#define UTM_NORTH TRUE
-
+    _utm_zone.set(32);
+    _utm_north.set(true);
+    _period.set(1);
+    _dynamics_model.set(gps::ADAPTIVE);
 }
 
 Task::~Task() {}
@@ -120,7 +121,14 @@ bool Task::configureHook()
             correction_input_port = _port;
         }
 
-        gps.setReceiverDynamics(DGPS::ADAPTIVE);
+        UserDynamics dynamics = _user_dynamics.get();
+        if (dynamics.hSpeed)
+        {
+            gps.setUserDynamics(dynamics.hSpeed, dynamics.hAccel, dynamics.vSpeed, dynamics.vAccel);
+            gps.setReceiverDynamics(gps::USER_DEFINED);
+        }
+        else
+            gps.setReceiverDynamics(_dynamics_model);
             
         if(!gps.setRTKInputPort(correction_input_port))
         {
