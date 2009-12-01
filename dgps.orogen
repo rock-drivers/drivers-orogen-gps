@@ -37,9 +37,9 @@ task_context 'Task' do
 end
 
 
-deployment "test" do
+deployment "test_dgps" do
     do_not_install
-    gps_task = task("driver", "Task")
+    gps_task = task("Task", "Task")
 
     add_default_logger
     if !corba_enabled?

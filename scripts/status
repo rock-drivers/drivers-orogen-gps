@@ -1,0 +1,56 @@
+require 'orocos'
+include Orocos
+
+BASE_DIR = File.expand_path('..', File.dirname(__FILE__))
+ENV['PKG_CONFIG_PATH'] = "#{File.join(BASE_DIR, 'build')}:#{ENV['PKG_CONFIG_PATH']}"
+Orocos.initialize
+
+Orocos::Process.spawn 'test_dgps', :output => 'dgps-log.txt' do |p|
+    task = p.task('Task')
+
+    task.device = '/dev/ttyUSB0'
+    task.port = 'A' # USB port on the board
+    task.correction_port = "5000" # UDP port for incoming correction data
+
+    dynamics = task.user_dynamics
+    dynamics.hSpeed = 3
+    dynamics.hAccel = 1
+    dynamics.vSpeed = 1
+    dynamics.vAccel = 1
+    task.user_dynamics = dynamics
+
+    task.configure
+    task.start
+    
+    solution_reader      = task.solution.reader
+    constellation_reader = task.constellation.reader
+
+    STDERR.puts "Type | dLat dLong dAlt | Used usedMinSNR PDOP Tracked trackedMinSNR Known"
+    while true
+        solution = solution_reader.read
+        constellation = constellation_reader.read
+
+        info = ""
+        if solution
+            info << "%s | %2.2f %2.2f %2.2f | %i " % [
+                solution.positionType.to_s,
+                solution.deviationLatitude, solution.deviationLongitude,
+                solution.deviationAltitude, solution.noOfSatellites]
+        end
+        if constellation
+            used    = constellation.quality.usedSatellites.
+                map do |prn|
+                    constellation.satellites.knownSatellites.find { |s| s.PRN == prn }
+                end
+            tracked = constellation.satellites.knownSatellites.find_all { |s| s.SNR && s.SNR > 0 }
+            info << " %2.2f %2.2f %i %2.2f %i" % [used.map { |s| s.SNR }.min,
+                constellation.quality.pdop,
+                tracked.length, tracked.map { |s| s.SNR }.min,
+                constellation.satellites.knownSatellites.length]
+        end
+        STDERR.puts info
+        sleep 1
+    end
+end
+    
+
