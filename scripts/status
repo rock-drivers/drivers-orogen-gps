@@ -1,5 +1,12 @@
+#! /usr/bin/env ruby
+
 require 'orocos'
 include Orocos
+
+if ARGV.size != 1
+    STDERR.puts "scripts/status device"
+    exit 1
+end
 
 BASE_DIR = File.expand_path('..', File.dirname(__FILE__))
 ENV['PKG_CONFIG_PATH'] = "#{File.join(BASE_DIR, 'build')}:#{ENV['PKG_CONFIG_PATH']}"
@@ -8,7 +15,7 @@ Orocos.initialize
 Orocos::Process.spawn 'test_dgps', :output => 'dgps-log.txt' do |p|
     task = p.task('Task')
 
-    task.device = '/dev/ttyUSB0'
+    task.device = ARGV[0]
     task.port = 'A' # USB port on the board
     task.correction_port = "5000" # UDP port for incoming correction data
 
