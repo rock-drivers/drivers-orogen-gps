@@ -222,11 +222,11 @@ void Task::updateHook()
 		    coTransform->Transform(1, &la, &lo, &alt);
 		    DFKI::PositionReading pos;
 		    pos.stamp = gps.position.timestamp;
-		    pos.position.x() = la - _origin.value().x();
-		    pos.position.y() = lo - _origin.value().y();
+		    pos.position.x() = lo - _origin.value().x();
+		    pos.position.y() = la - _origin.value().y();
 		    pos.position.z() = alt - _origin.value().z();
-		    pos.error.x() = gps.errors.deviationLatitude;
-		    pos.error.y() = gps.errors.deviationLongitude;
+		    pos.error.x() = gps.errors.deviationLongitude;
+		    pos.error.y() = gps.errors.deviationLatitude;
 		    pos.error.z() = gps.errors.deviationAltitude;
 		    _position_readings.write(pos);
 		}
