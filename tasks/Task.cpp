@@ -22,9 +22,10 @@ Task::Task(std::string const& name)
     : TaskBase(name)
 {
 
-#define UTM_ZONE 32
-#define UTM_NORTH TRUE
-
+    _utm_zone.set(32);
+    _utm_north.set(true);
+    _period.set(1);
+    _dynamics_model.set(gps::ADAPTIVE);
 }
 
 Task::~Task() {}
@@ -120,7 +121,14 @@ bool Task::configureHook()
             correction_input_port = _port;
         }
 
-        gps.setReceiverDynamics(DGPS::ADAPTIVE);
+        UserDynamics dynamics = _user_dynamics.get();
+        if (dynamics.hSpeed)
+        {
+            gps.setUserDynamics(dynamics.hSpeed, dynamics.hAccel, dynamics.vSpeed, dynamics.vAccel);
+            gps.setReceiverDynamics(gps::USER_DEFINED);
+        }
+        else
+            gps.setReceiverDynamics(_dynamics_model);
             
         if(!gps.setRTKInputPort(correction_input_port))
         {
@@ -147,9 +155,8 @@ bool Task::configureHook()
 
 bool Task::startHook()
 {
-    // start GPS information looping
     last_update = base::Time();
-     
+    last_constellation_update = base::Time();
     return gps.setPeriodicData(_port, _period);
 }
 
@@ -184,16 +191,8 @@ void Task::updateHook()
     
     if (fd_activity->isUpdated(gps.getFileDescriptor()))
     {
-        //std::cout << base::Time::now().toMilliseconds() << " data is available on GPS file descriptor" << std::endl;
         try {
             gps.collectPeriodicData();
-            std::cout << base::Time::now().toMilliseconds() << " "
-                << gps.position.positionType << " "
-                << last_update.toMilliseconds() << " "
-                << gps.position.timestamp.toMilliseconds() << " "
-                << gps.errors.timestamp.toMilliseconds() << " "
-                << (gps.position.timestamp == gps.errors.timestamp) << " "
-                << (last_update < gps.position.timestamp) << std::endl;
 
             if (last_update < gps.position.timestamp && gps.position.timestamp == gps.errors.timestamp)
             {
@@ -223,14 +222,24 @@ void Task::updateHook()
 		    coTransform->Transform(1, &la, &lo, &alt);
 		    base::PositionReading pos;
 		    pos.stamp = gps.position.timestamp;
-		    pos.position.x() = la - _origin.value().x();
-		    pos.position.y() = lo - _origin.value().y();
+		    pos.position.x() = lo - _origin.value().x();
+		    pos.position.y() = la - _origin.value().y();
 		    pos.position.z() = alt - _origin.value().z();
-		    pos.error.x() = gps.errors.deviationLatitude;
-		    pos.error.y() = gps.errors.deviationLongitude;
+		    pos.error.x() = gps.errors.deviationLongitude;
+		    pos.error.y() = gps.errors.deviationLatitude;
 		    pos.error.z() = gps.errors.deviationAltitude;
 		    _position_readings.write(pos);
 		}
+            }
+
+            if (gps.solutionQuality.timestamp > last_constellation_update &&
+                    gps.satellites.timestamp > last_constellation_update)
+            {
+                ConstellationInfo info;
+                info.quality    = gps.solutionQuality;
+                info.satellites = gps.satellites;
+                _constellation.write(info);
+                last_constellation_update = base::Time::now();
             }
         }
         catch(timeout_error) {

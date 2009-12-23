@@ -4,6 +4,7 @@ version 0.1
 using_library 'dgps'
 import_types_from 'base'
 import_types_from 'dgpstypes.hh'
+import_types_from 'dgpsModuleTypes.hpp'
 
 task_context 'Task' do
 	needs_configuration
@@ -25,16 +26,20 @@ task_context 'Task' do
 	    doc "UTM north for conversion of WGS84 to UTM"
 	property("origin", "/base/Vector3").
 	    doc "Origin in UTM coordinates, that is used for position readings." 
+        property("dynamics_model", "/gps/DYNAMICS_MODEL").
+	    doc "Model of the receiver dynamics" 
+	property("user_dynamics", "/dgps/UserDynamics").
+	    doc "If set, the module will put the board in USER_DYNAMICS mode with these values" 
 		
 	output_port('solution', '/gps/Solution')
 	output_port('position_readings', '/base/PositionReading')
-	# output_port('satellite', '/gps/SatelliteInfo')
+	output_port('constellation', '/dgps/ConstellationInfo')
 end
 
 
-deployment "test" do
+deployment "test_dgps" do
     do_not_install
-    gps_task = task("driver", "Task")
+    gps_task = task("Task", "Task")
 
     add_default_logger
     if !corba_enabled?

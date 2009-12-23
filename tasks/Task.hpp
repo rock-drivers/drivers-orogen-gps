@@ -22,6 +22,7 @@ namespace dgps {
     protected:
 
         base::Time last_update;
+        base::Time last_constellation_update;
         int openSocket(std::string const& port);
         int correction_socket;
 
