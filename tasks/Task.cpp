@@ -220,15 +220,15 @@ void Task::updateHook()
 		    double alt = solution.altitude;
 
 		    coTransform->Transform(1, &la, &lo, &alt);
-		    base::PositionReading pos;
-		    pos.stamp = gps.position.timestamp;
+		    base::samples::RigidBodyState pos;
+		    pos.time = gps.position.timestamp;
 		    pos.position.x() = lo - _origin.value().x();
 		    pos.position.y() = la - _origin.value().y();
 		    pos.position.z() = alt - _origin.value().z();
-		    pos.error.x() = gps.errors.deviationLongitude;
-		    pos.error.y() = gps.errors.deviationLatitude;
-		    pos.error.z() = gps.errors.deviationAltitude;
-		    _position_readings.write(pos);
+		    pos.cov_position(0, 0) = gps.errors.deviationLongitude * gps.errors.deviationLongitude;
+		    pos.cov_position(1, 1) = gps.errors.deviationLatitude * gps.errors.deviationLatitude;
+		    pos.cov_position(2, 2) = gps.errors.deviationAltitude * gps.errors.deviationAltitude;
+                    _position.write(pos);
 		}
             }
 

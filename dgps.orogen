@@ -24,7 +24,7 @@ task_context 'Task' do
 	    doc "UTM zone for conversion of WGS84 to UTM"
 	property("utm_north", "int", 1).
 	    doc "UTM north for conversion of WGS84 to UTM"
-	property("origin", "/base/Vector3").
+	property("origin", "/wrappers/Position").
 	    doc "Origin in UTM coordinates, that is used for position readings." 
         property("dynamics_model", "/gps/DYNAMICS_MODEL").
 	    doc "Model of the receiver dynamics" 
@@ -32,7 +32,7 @@ task_context 'Task' do
 	    doc "If set, the module will put the board in USER_DYNAMICS mode with these values" 
 		
 	output_port('solution', '/gps/Solution')
-	output_port('position_readings', '/base/PositionReading')
+	output_port('position', '/wrappers/samples/RigidBodyState')
 	output_port('constellation', '/dgps/ConstellationInfo')
 end
 
