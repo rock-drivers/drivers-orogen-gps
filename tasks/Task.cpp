@@ -194,12 +194,12 @@ void Task::updateHook()
         try {
             gps.collectPeriodicData();
 
-            if (last_update < gps.position.timestamp && gps.position.timestamp == gps.errors.timestamp)
+            if (last_update < gps.position.time && gps.position.time == gps.errors.time)
             {
-                last_update = gps.position.timestamp;
+                last_update = gps.position.time;
 
                 gps::Solution solution;
-                solution.timestamp                    = gps.position.timestamp;
+                solution.time                    = gps.position.time;
                 solution.latitude                     = gps.position.latitude;
                 solution.longitude                    = gps.position.longitude;
                 solution.positionType                 = gps.position.positionType;
@@ -221,7 +221,7 @@ void Task::updateHook()
 
 		    coTransform->Transform(1, &la, &lo, &alt);
 		    base::samples::RigidBodyState pos;
-		    pos.time = gps.position.timestamp;
+		    pos.time = gps.position.time;
 		    pos.position.x() = lo - _origin.value().x();
 		    pos.position.y() = la - _origin.value().y();
 		    pos.position.z() = alt - _origin.value().z();
@@ -232,8 +232,8 @@ void Task::updateHook()
 		}
             }
 
-            if (gps.solutionQuality.timestamp > last_constellation_update &&
-                    gps.satellites.timestamp > last_constellation_update)
+            if (gps.solutionQuality.time > last_constellation_update &&
+                    gps.satellites.time > last_constellation_update)
             {
                 ConstellationInfo info;
                 info.quality    = gps.solutionQuality;
