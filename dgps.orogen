@@ -31,9 +31,14 @@ task_context 'Task' do
 	property("user_dynamics", "/dgps/UserDynamics").
 	    doc "If set, the module will put the board in USER_DYNAMICS mode with these values" 
 		
-	output_port('solution', '/gps/Solution')
-	output_port('position', '/wrappers/samples/RigidBodyState')
-	output_port('constellation', '/dgps/ConstellationInfo')
+	output_port('solution', '/gps/Solution').
+            doc "the GPS solution as reported by the hardware"
+
+	output_port('constellation', '/dgps/ConstellationInfo').
+            doc "the status of the GPS constellation"
+
+	output_port('position_samples', '/wrappers/samples/RigidBodyState').
+            doc "computed position in m, in the UTM coordinate provided and local to the origin"
 end
 
 

@@ -228,7 +228,7 @@ void Task::updateHook()
 		    pos.cov_position(0, 0) = gps.errors.deviationLongitude * gps.errors.deviationLongitude;
 		    pos.cov_position(1, 1) = gps.errors.deviationLatitude * gps.errors.deviationLatitude;
 		    pos.cov_position(2, 2) = gps.errors.deviationAltitude * gps.errors.deviationAltitude;
-                    _position.write(pos);
+                    _position_samples.write(pos);
 		}
             }
 
