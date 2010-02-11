@@ -219,7 +219,7 @@ void Task::updateHook()
 		    double lo = solution.longitude;
 		    double alt = solution.altitude;
 
-		    coTransform->Transform(1, &la, &lo, &alt);
+		    coTransform->Transform(1, &lo, &la, &alt);
 		    base::samples::RigidBodyState pos;
 		    pos.time = gps.position.time;
 		    pos.position.x() = lo - _origin.value().x();
