@@ -1,33 +1,5 @@
-#! /usr/bin/env ruby
-
-require 'orocos'
-include Orocos
-
-if ARGV.size != 1
-    STDERR.puts "scripts/status device"
-    exit 1
-end
-
-BASE_DIR = File.expand_path('..', File.dirname(__FILE__))
-ENV['PKG_CONFIG_PATH'] = "#{File.join(BASE_DIR, 'build')}:#{ENV['PKG_CONFIG_PATH']}"
-Orocos.initialize
-
-Orocos::Process.spawn 'test_dgps', :output => 'dgps-log.txt' do |p|
-    task = p.task('Task')
-
-    task.device = ARGV[0]
-    task.port = 'A' # USB port on the board
-    task.correction_port = "5000" # UDP port for incoming correction data
-
-    dynamics = task.user_dynamics
-    dynamics.hSpeed = 3
-    dynamics.hAccel = 1
-    dynamics.vSpeed = 1
-    dynamics.vAccel = 1
-    task.user_dynamics = dynamics
-
-    task.configure
-    task.start
+def monitor_gps(task)
+    p = task.process
     
     solution_reader      = task.solution.reader
     constellation_reader = task.constellation.reader
@@ -37,14 +9,18 @@ Orocos::Process.spawn 'test_dgps', :output => 'dgps-log.txt' do |p|
         solution = solution_reader.read
         constellation = constellation_reader.read
 
-        info = ""
+        if p && !p.alive?
+            raise "module crashed"
+        end
+
+        info = "%s " % [task.state.to_s]
         if solution
             info << "%s | %2.2f %2.2f %2.2f | %i " % [
                 solution.positionType.to_s,
                 solution.deviationLatitude, solution.deviationLongitude,
                 solution.deviationAltitude, solution.noOfSatellites]
         end
-        if constellation
+        if constellation && !constellation.quality.usedSatellites.empty?
             used    = constellation.quality.usedSatellites.
                 map do |prn|
                     constellation.satellites.knownSatellites.find { |s| s.PRN == prn }
@@ -59,5 +35,4 @@ Orocos::Process.spawn 'test_dgps', :output => 'dgps-log.txt' do |p|
         sleep 1
     end
 end
-    
 

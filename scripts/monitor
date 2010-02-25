@@ -1,0 +1,32 @@
+#! /usr/bin/env ruby
+
+require 'orocos'
+require 'monitor_gps'
+include Orocos
+
+if ARGV.size < 3 || ARGV.size > 4
+    STDERR.puts "scripts/status task_name device task_port [correction_port]"
+    exit 1
+end
+
+Orocos.initialize
+
+task_name   = ARGV.shift
+device_name = ARGV.shift
+task_port   = ARGV.shift
+correction_port = ARGV.shift
+
+task = TaskContext.get(task_name)
+task.device = device_name
+task.port = task_port # USB port on the board
+if correction_port
+    task.correction_port = correction_port # UDP port for incoming correction data
+end
+
+if !task.running?
+    task.configure
+    task.start
+end
+
+monitor_gps(task)
+
