@@ -4,7 +4,7 @@ require 'orocos'
 require 'monitor_gps'
 include Orocos
 
-if ARGV.size < 3 || ARGV.size > 4
+if ARGV.size < 1 || ARGV.size > 4
     STDERR.puts "scripts/status task_name device task_port [correction_port]"
     exit 1
 end
