@@ -39,6 +39,9 @@ task_context 'Task' do
 
 	output_port('position_samples', '/wrappers/samples/RigidBodyState').
             doc "computed position in m, in the UTM coordinate provided and local to the origin"
+
+	output_port('time', '/gps/Time').
+            doc "output the real time, cpu time and dgps processing latency"
 end
 
 
