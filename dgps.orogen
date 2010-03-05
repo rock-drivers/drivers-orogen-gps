@@ -5,6 +5,7 @@ using_library 'dgps'
 import_types_from 'base'
 import_types_from 'dgpstypes.hh'
 import_types_from 'dgpsModuleTypes.hpp'
+type_export_policy :used
 
 task_context 'Task' do
 	needs_configuration
