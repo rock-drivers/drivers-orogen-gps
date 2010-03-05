@@ -194,11 +194,21 @@ void Task::updateHook()
         try {
             gps.collectPeriodicData();
 
+	    if (!gps.cpu_time.isNull())
+	    {
+	        gps::Time time;
+	        time.cpu_time		=gps.cpu_time; 
+	        time.gps_time		=gps.real_time;
+	        time.processing_latency	=gps.processing_latency;
+	        _time.write(time); 
+	    }
+	    
             if (last_update < gps.position.time && gps.position.time == gps.errors.time)
             {
                 last_update = gps.position.time;
 
                 gps::Solution solution;
+		
                 solution.time                    = gps.position.time;
                 solution.latitude                     = gps.position.latitude;
                 solution.longitude                    = gps.position.longitude;
