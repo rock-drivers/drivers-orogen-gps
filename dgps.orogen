@@ -21,7 +21,7 @@ task_context 'Task' do
         property("period",   "double").
             doc "the update period"
 
-	property("utm_zone", "int", 33).
+	property("utm_zone", "int", 32).
 	    doc "UTM zone for conversion of WGS84 to UTM"
 	property("utm_north", "int", 1).
 	    doc "UTM north for conversion of WGS84 to UTM"
