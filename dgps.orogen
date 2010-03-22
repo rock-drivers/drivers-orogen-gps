@@ -21,6 +21,9 @@ task_context 'Task' do
         property("period",   "double").
             doc "the update period"
 
+        property("fix_threshold", "/gps/AMBIGUITY_THRESHOLD", :FIX_99_0).
+            doc "the threshold at which the RTK engine will switch to FIX mode"
+
 	property("utm_zone", "int", 32).
 	    doc "UTM zone for conversion of WGS84 to UTM"
 	property("utm_north", "int", 1).

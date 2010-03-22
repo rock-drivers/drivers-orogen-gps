@@ -121,6 +121,13 @@ bool Task::configureHook()
             correction_input_port = _port;
         }
 
+        gps::AMBIGUITY_THRESHOLD threshold = _fix_threshold.get();
+        if (!gps.setFixThreshold(threshold))
+        {
+            RTT::log(Error) << "failed to change RTK_FIX ambiguity threshold" << RTT::endlog();
+            return false;
+        }
+
         UserDynamics dynamics = _user_dynamics.get();
         if (dynamics.hSpeed)
         {
