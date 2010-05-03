@@ -1,18 +1,22 @@
+<?xml version="1.0"?>
 <package>
-    <description brief="oroGen driver for the Magellan MB500 dgps board">
+  <description brief="oroGen driver for the Magellan MB500 dgps board">
         This oroGen component offers an integrated driver for the Magellan MB500
         differential GPS board. Additional functionality includes the reception
         of differential data through UDP sockets.
     </description>
-    <author>Sylvain Joyeux/sylvain.joyeux@dfki.de</author>
-    <copyright>
+  <author>Sylvain Joyeux/sylvain.joyeux@dfki.de</author>
+  <copyright>
         DFKI/robotik@dfki.de
         Sylvain Joyeux/sylvain.joyeux@m4x.org
     </copyright>
-    <license>GPL v2 or later</license>
-
-    <rosdep name="gdal" />
-    <!-- PROJ.4 is required by GDAL to support long/lat to UTM convertions -->
-    <rosdep name="proj" />
+  <license>GPL v2 or later</license>
+  <rosdep name="gdal"/>
+  <!-- PROJ.4 is required by GDAL to support long/lat to UTM convertions -->
+  <rosdep name="proj"/>
+  <depend package="drivers/dgps"/>
+  <depend package="orocos/base"/>
+  <depend package="orocos/logger"/>
+  <depend package="orocos/orogen"/>
+  <depend package="orocos/rtt"/>
 </package>
-
