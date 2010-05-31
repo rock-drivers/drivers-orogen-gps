@@ -1,70 +1,28 @@
-# - Try to find GDAL
-# Once done this will define
-#
-#  GDAL_FOUND - system has GDAL
-#  GDAL_INCLUDE_DIRS - the GDAL include directory
-#  GDAL_LIBRARIES - Link these to use GDAL
-#  GDAL_DEFINITIONS - Compiler switches required for using GDAL
-#
-#  Copyright (c) 2009  <>
-#
-#  Redistribution and use is allowed according to the terms of the New
-#  BSD license.
-#  For details see the accompanying COPYING-CMAKE-SCRIPTS file.
-#
+SET(GDAL_FOUND FALSE)
+FIND_PROGRAM(GDAL_GDAL_CONFIG_EXECUTABLE NAMES gdal-config)
 
+IF(GDAL_GDAL_CONFIG_EXECUTABLE)
+    SET(GDAL_FOUND TRUE)
 
-if (GDAL_LIBRARIES AND GDAL_INCLUDE_DIRS)
-  # in cache already
-  set(GDAL_FOUND TRUE)
-else (GDAL_LIBRARIES AND GDAL_INCLUDE_DIRS)
-  find_path(GDAL_INCLUDE_DIR
-    NAMES
-      ogr_spatialref.h
-    PATHS
-      /usr/include
-      /usr/local/include
-      /opt/local/include
-      /sw/include
-    PATH_SUFFIXES
-      gdal
-  )
+    EXECUTE_PROCESS(COMMAND ${GDAL_GDAL_CONFIG_EXECUTABLE} --cflags
+        OUTPUT_VARIABLE GDAL_CFLAGS)
+    STRING(REPLACE "\n" "" GDAL_CFLAGS ${GDAL_CFLAGS})
 
-  find_library(GDAL_LIBRARY
-    NAMES
-      gdal
-      gdal1.5.0
-      gdal1.6.0
-    PATHS
-      /usr/lib
-      /usr/local/lib
-      /opt/local/lib
-      /sw/lib
-  )
+    EXECUTE_PROCESS(COMMAND ${GDAL_GDAL_CONFIG_EXECUTABLE} --libs
+        OUTPUT_VARIABLE GDAL_LIBRARIES)
+    STRING(REPLACE "\n" "" GDAL_LIBRARIES ${GDAL_LIBRARIES})
 
-  set(GDAL_INCLUDE_DIRS
-    ${GDAL_INCLUDE_DIR}
-  )
-  set(GDAL_LIBRARIES
-    ${GDAL_LIBRARY}
-)
+    MARK_AS_ADVANCED(GDAL_CFLAGS GDAL_LIBRARIES)
+ENDIF()
 
-  if (GDAL_INCLUDE_DIRS AND GDAL_LIBRARIES)
-     set(GDAL_FOUND TRUE)
-  endif (GDAL_INCLUDE_DIRS AND GDAL_LIBRARIES)
+IF (GDAL_FOUND)
+    IF (NOT GDAL_FIND_QUIETLY)
+	MESSAGE(STATUS "Found the GDAL library")
+    ENDIF(NOT GDAL_FIND_QUIETLY)
+ELSE (GDAL_FOUND)
+    IF (GDAL_FIND_REQUIRED)
+	MESSAGE(FATAL_ERROR "Please install the GDAL library")
+    ENDIF(GDAL_FIND_REQUIRED)
+ENDIF(GDAL_FOUND)
 
-  if (GDAL_FOUND)
-    if (NOT GDAL_FIND_QUIETLY)
-      message(STATUS "Found GDAL: ${GDAL_LIBRARIES}")
-    endif (NOT GDAL_FIND_QUIETLY)
-  else (GDAL_FOUND)
-    if (GDAL_FIND_REQUIRED)
-      message(FATAL_ERROR "Could not find GDAL")
-    endif (GDAL_FIND_REQUIRED)
-  endif (GDAL_FOUND)
-
-  # show the GDAL_INCLUDE_DIRS and GDAL_LIBRARIES variables only in the advanced view
-  mark_as_advanced(GDAL_INCLUDE_DIRS GDAL_LIBRARIES)
-
-endif (GDAL_LIBRARIES AND GDAL_INCLUDE_DIRS)
 
