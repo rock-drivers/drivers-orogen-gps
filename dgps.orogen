@@ -33,8 +33,11 @@ task_context 'Task' do
         property("dynamics_model", "/gps/DYNAMICS_MODEL").
 	    doc "Model of the receiver dynamics" 
 	property("user_dynamics", "/dgps/UserDynamics").
-	    doc "If set, the module will put the board in USER_DYNAMICS mode with these values" 
-		
+	    doc "If set, the module will put the board in USER_DYNAMICS mode with these values"
+
+        property("ntpd_shm_unit",   "int").
+            doc "The ntpd shm driver unit to use, -1 for not using one at all"
+
 	output_port('solution', '/gps/Solution').
             doc "the GPS solution as reported by the hardware"
 

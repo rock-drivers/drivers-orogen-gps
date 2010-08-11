@@ -26,6 +26,7 @@ Task::Task(std::string const& name)
     _utm_north.set(true);
     _period.set(1);
     _dynamics_model.set(gps::ADAPTIVE);
+    _ntpd_shm_unit.set(-1);
 }
 
 Task::~Task() {}
@@ -148,6 +149,11 @@ bool Task::configureHook()
             correction_socket = socket.release();
             getFileDescriptorActivity()->watch(correction_socket);
         }
+
+	if (_ntpd_shm_unit.get() > -1 &&
+	    _ntpd_shm_unit.get() < 4)
+	    if (!gps.enableNtpdShm(_ntpd_shm_unit.get()))
+		_ntpd_shm_unit.set(-1);
 
         // start device
         getFileDescriptorActivity()->watch(gps.getFileDescriptor());
