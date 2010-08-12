@@ -150,10 +150,14 @@ bool Task::configureHook()
             getFileDescriptorActivity()->watch(correction_socket);
         }
 
-	if (_ntpd_shm_unit.get() > -1 &&
-	    _ntpd_shm_unit.get() < 4)
+	if (_ntpd_shm_unit.get() > -1 && _ntpd_shm_unit.get() < 4)
+        {
 	    if (!gps.enableNtpdShm(_ntpd_shm_unit.get()))
-		_ntpd_shm_unit.set(-1);
+            {
+                RTT::log(Error) << "failed to initialize the NTP SHM" << RTT::endlog();
+                return false;
+            }
+        }
 
         // start device
         getFileDescriptorActivity()->watch(gps.getFileDescriptor());
