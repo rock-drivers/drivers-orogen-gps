@@ -26,7 +26,7 @@ task_context 'Task' do
 
 	property("utm_zone", "int", 32).
 	    doc "UTM zone for conversion of WGS84 to UTM"
-	property("utm_north", "int", 1).
+	property("utm_north", "bool", true).
 	    doc "UTM north for conversion of WGS84 to UTM"
 	property("origin", "/wrappers/Position").
 	    doc "Origin in UTM coordinates, that is used for position readings." 
