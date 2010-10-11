@@ -2,42 +2,14 @@ name 'dgps'
 version 0.1
 
 using_library 'dgps'
+using_library 'libgps'
 import_types_from 'base'
 import_types_from 'dgpstypes.hh'
 import_types_from 'dgpsModuleTypes.hpp'
 type_export_policy :used
 
-task_context 'Task' do
-	needs_configuration
-	fd_driven
-	
-	property("device", "/std/string").
-            doc "the device file used to connect to the gps"
-        property("port",   "/std/string").
-            doc "the board port (A, B, C or D) at which we are connected"
-        property("correction_port",   "/std/string").
-            doc "the port (A, B, C, D or a number) at which the board gets correction data note, number means it is getting the correction data s UDP packets to port X"
 
-        property("period",   "double").
-            doc "the update period"
-
-        property("fix_threshold", "/gps/AMBIGUITY_THRESHOLD", :FIX_99_0).
-            doc "the threshold at which the RTK engine will switch to FIX mode"
-
-	property("utm_zone", "int", 32).
-	    doc "UTM zone for conversion of WGS84 to UTM"
-	property("utm_north", "bool", true).
-	    doc "UTM north for conversion of WGS84 to UTM"
-	property("origin", "/wrappers/Position").
-	    doc "Origin in UTM coordinates, that is used for position readings." 
-        property("dynamics_model", "/gps/DYNAMICS_MODEL").
-	    doc "Model of the receiver dynamics" 
-	property("user_dynamics", "/dgps/UserDynamics").
-	    doc "If set, the module will put the board in USER_DYNAMICS mode with these values"
-
-        property("ntpd_shm_unit",   "int", -1).
-            doc "The ntpd shm driver unit to use, -1 for not using one at all. 0 and 1 are reserved for root"
-
+task_context 'BaseTask' do
 	output_port('solution', '/gps/Solution').
             doc "the GPS solution as reported by the hardware"
 
@@ -49,6 +21,44 @@ task_context 'Task' do
 
 	output_port('time', '/gps/Time').
             doc "output the real time, cpu time and dgps processing latency"
+
+	property("utm_zone", "int", 32).
+	    doc "UTM zone for conversion of WGS84 to UTM"
+	property("utm_north", "bool", true).
+	    doc "UTM north for conversion of WGS84 to UTM"
+	property("origin", "/wrappers/Position").
+	    doc "Origin in UTM coordinates, that is used for position readings." 
+end
+
+#task that is using gpsd daemon
+task_context 'GPSDTask' do
+        subclasses 'BaseTask'
+        property("hostname", "string","localhost").
+            doc "hostname where the gps daemon is running"
+end
+
+#task that is using NMEA
+task_context 'Task' do
+        subclasses 'BaseTask'
+	needs_configuration
+	fd_driven
+	
+	property("device", "/std/string").
+            doc "the device file used to connect to the gps"
+        property("port",   "/std/string").
+            doc "the board port (A, B, C or D) at which we are connected"
+        property("correction_port",   "/std/string").
+            doc "the port (A, B, C, D or a number) at which the board gets correction data note, number means it is getting the correction data s UDP packets to port X"
+        property("period",   "double").
+            doc "the update period"
+        property("fix_threshold", "/gps/AMBIGUITY_THRESHOLD", :FIX_99_0).
+            doc "the threshold at which the RTK engine will switch to FIX mode"
+        property("dynamics_model", "/gps/DYNAMICS_MODEL").
+	    doc "Model of the receiver dynamics" 
+	property("user_dynamics", "/dgps/UserDynamics").
+	    doc "If set, the module will put the board in USER_DYNAMICS mode with these values"
+        property("ntpd_shm_unit",   "int", -1).
+            doc "The ntpd shm driver unit to use, -1 for not using one at all. 0 and 1 are reserved for root"
 end
 
 

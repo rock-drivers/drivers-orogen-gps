@@ -14,6 +14,7 @@
   <rosdep name="gdal"/>
   <!-- PROJ.4 is required by GDAL to support long/lat to UTM convertions -->
   <rosdep name="proj"/>
+  <depend package="libgps"/>
   <depend package="drivers/dgps"/>
   <depend package="orocos/base"/>
   <depend package="orocos/logger"/>
