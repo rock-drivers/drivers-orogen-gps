@@ -21,8 +21,10 @@ GPSDTask::GPSDTask(std::string const& name, TaskCore::TaskState initial_state)
 
 bool GPSDTask::configureHook()
 {
+  if(!BaseTask::configureHook())
+    return false;
+
   gps_data_t* pdata = gpsd_daemon.open(_hostname.value().c_str(),"2947");
-  
   if (pdata)
   {
       std::cout << "found gpsd deamon"<< std::endl;
@@ -38,6 +40,8 @@ bool GPSDTask::configureHook()
 
 bool GPSDTask::startHook()
 {
+  if(!BaseTask::startHook())
+    return false;
   counter = 0;
   return true;
 }
@@ -51,7 +55,6 @@ void GPSDTask::updateHook()
       {
         counter = 0;
         gps::Solution solution;
-        
         solution.altitude =  pdata->fix.altitude;
         solution.latitude =  pdata->fix.latitude;
         solution.longitude =  pdata->fix.longitude;
@@ -77,7 +80,10 @@ void GPSDTask::updateHook()
           solution.positionType = gps::DIFFERENTIAL;
           break;
         }
-        _solution.write(solution);
+        update(solution);
+        // at the moment no constallation info is saved
+        //
+
       }
       else
       {
