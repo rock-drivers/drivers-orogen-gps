@@ -88,7 +88,7 @@ void GPSDTask::updateHook()
       else
       {
           std::cerr << "poll error" << std::endl;
-          fatal();
+          return BaseTask::error();
       }
   }
   else
@@ -97,7 +97,7 @@ void GPSDTask::updateHook()
   if (counter > 100)
   {
       std::cerr << "poll error: gpsd is not responding" << std::endl;
-      fatal();
+      return BaseTask::error();
   }
 }
 

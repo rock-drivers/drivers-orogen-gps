@@ -171,7 +171,7 @@ void Task::updateHook()
         dynamic_cast<RTT::FileDescriptorActivity*>(getActivity().get());
 
     if (fd_activity->hasError())
-        return error();
+        return BaseTask::error();
 
     if (correction_socket != -1 && fd_activity->isUpdated(correction_socket))
     {
