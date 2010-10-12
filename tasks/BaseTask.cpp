@@ -59,6 +59,7 @@ void BaseTask::updateConstallation(const ConstellationInfo &info)
 void BaseTask::update(const gps::Solution &solution)
 {
     last_update = solution.time;
+    _solution.write(solution);
 	
     // if there is a valid reading, then write it to position readings port
     if( solution.positionType != gps::NO_SOLUTION )
