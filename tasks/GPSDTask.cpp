@@ -51,7 +51,7 @@ void GPSDTask::updateHook()
   if(gpsd_daemon.waiting())
   {
       gps_data_t* pdata = gpsd_daemon.poll();
-      if (pdata)
+      if (pdata) 
       {
         counter = 0;
         gps::Solution solution;
@@ -66,20 +66,28 @@ void GPSDTask::updateHook()
         solution.time = base::Time::now();
         solution.ageOfDifferentialCorrections = -1;
 
-        switch(pdata->status)
+        switch(pdata->fix.mode)
         {
-        case STATUS_NO_FIX:
+        case MODE_NOT_SEEN:
+          solution.positionType = gps::NO_SOLUTION;
+          break;
+        
+        case MODE_NO_FIX:
           solution.positionType = gps::NO_SOLUTION;
           break;
 
-        case STATUS_FIX:
+        case MODE_2D:
           solution.positionType = gps::RTK_FIXED;
           break;
 
-        case STATUS_DGPS_FIX:
-          solution.positionType = gps::DIFFERENTIAL;
+        case MODE_3D:
+          solution.positionType = gps::RTK_FIXED;
           break;
+
+        default:
+          solution.positionType = gps::INVALID;
         }
+        solution.ageOfDifferentialCorrections = (int) pdata->status;
         update(solution);
         // at the moment no constallation info is saved
         //

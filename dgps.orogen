@@ -74,7 +74,8 @@ end
 
 deployment "test_gpsd" do
     do_not_install
-    gps_task = task("Task", "GPSDTask")
+    gps_task = task("Task", "GPSDTask").
+      periodic 0.1
 
     add_default_logger
     if !corba_enabled?
