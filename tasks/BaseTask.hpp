@@ -1,3 +1,14 @@
+/*
+ * Author: Alexander Duda / Alexander.Duda@dfki.define
+ *
+ * Created on 12. October 2010
+ */
+
+
+/*
+ * Base Class for orogen GPS Drivers
+ */
+
 #ifndef DGPS_BASETASK_TASK_HPP
 #define DGPS_BASETASK_TASK_HPP
 
@@ -21,7 +32,14 @@ namespace dgps {
         base::Time last_constellation_update;
 
     protected:
+        /*
+         * Updates the constellation of the satellites
+         */
         void updateConstallation(const ConstellationInfo &info);
+
+        /*
+         * Updates the solution and calculates the position in UTM coordinates
+         */
         void update(const gps::Solution &solution);
     public:
         BaseTask(std::string const& name = "dgps::BaseTask", TaskCore::TaskState initial_state = Stopped);
