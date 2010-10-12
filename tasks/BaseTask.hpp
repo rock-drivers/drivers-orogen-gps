@@ -3,6 +3,7 @@
 
 #include "dgps/BaseTaskBase.hpp"
 
+class OGRCoordinateTransformation;
 
 namespace RTT
 {
@@ -15,9 +16,13 @@ namespace dgps {
     {
 	friend class BaseTaskBase;
     protected:
-    
-    
+    	OGRCoordinateTransformation *coTransform;
+        base::Time last_update;
+        base::Time last_constellation_update;
 
+    protected:
+        void updateConstallation(const ConstellationInfo &info);
+        void update(const gps::Solution &solution);
     public:
         BaseTask(std::string const& name = "dgps::BaseTask", TaskCore::TaskState initial_state = Stopped);
 
@@ -36,14 +41,14 @@ namespace dgps {
          *     ...
          *   end
          */
-        // bool configureHook();
+        bool configureHook();
 
         /** This hook is called by Orocos when the state machine transitions
          * from Stopped to Running. If it returns false, then the component will
          * stay in Stopped. Otherwise, it goes into Running and updateHook()
          * will be called.
          */
-        // bool startHook();
+        bool startHook();
 
         /** This hook is called by Orocos when the component is in the Running
          * state, at each activity step. Here, the activity gives the "ticks"

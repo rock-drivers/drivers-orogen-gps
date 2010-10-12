@@ -7,23 +7,17 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <fcntl.h>
-#include <ogr_spatialref.h>
 
 using namespace std;
-
 using namespace dgps;
 using namespace RTT;
 
 RTT::FileDescriptorActivity* Task::getFileDescriptorActivity()
 { return dynamic_cast< RTT::FileDescriptorActivity* >(getActivity().get()); }
 
-
 Task::Task(std::string const& name)
     : TaskBase(name)
 {
-
-    _utm_zone.set(32);
-    _utm_north.set(true);
     _period.set(1);
     _dynamics_model.set(gps::ADAPTIVE);
     _ntpd_shm_unit.set(-1);
@@ -81,22 +75,8 @@ int Task::openSocket(std::string const& port)
 
 bool Task::configureHook()
 {
-    // setup conversion from WGS84 to UTM
-    OGRSpatialReference oSourceSRS;
-    OGRSpatialReference oTargetSRS;
-    
-    oSourceSRS.SetWellKnownGeogCS( "WGS84" );
-    oTargetSRS.SetWellKnownGeogCS( "WGS84" );
-    oTargetSRS.SetUTM( _utm_zone, _utm_north );
-
-    coTransform = OGRCreateCoordinateTransformation( &oSourceSRS,
-	    &oTargetSRS );
-
-    if( coTransform == NULL )
-    {
-	RTT::log(Error) << "failed to initialize CoordinateTransform UTM_ZONE:" << _utm_zone << " UTM_NORTH:" << _utm_north << RTT::endlog();
-	return false;
-    }
+    if(!BaseTask::configureHook())
+      return false;
 
     try {
         if (!gps.openRover(_device))
@@ -172,8 +152,8 @@ bool Task::configureHook()
 
 bool Task::startHook()
 {
-    last_update = base::Time();
-    last_constellation_update = base::Time();
+    if (!BaseTask::startHook())
+        return false;
     return gps.setPeriodicData(_port, _period);
 }
 
@@ -222,10 +202,7 @@ void Task::updateHook()
 	    
             if (last_update < gps.position.time && gps.position.time == gps.errors.time)
             {
-                last_update = gps.position.time;
-
                 gps::Solution solution;
-		
                 solution.time                    = gps.position.time;
                 solution.latitude                     = gps.position.latitude;
                 solution.longitude                    = gps.position.longitude;
@@ -237,27 +214,8 @@ void Task::updateHook()
                 solution.deviationLatitude            = gps.errors.deviationLatitude;
                 solution.deviationLongitude           = gps.errors.deviationLongitude;
                 solution.deviationAltitude            = gps.errors.deviationAltitude;
-                _solution.write(solution);
-		
-		// if there is a valid reading, then write it to position readings port
-		if( gps.position.positionType != gps::NO_SOLUTION )
-		{ 
-		    double la = solution.latitude;
-		    double lo = solution.longitude;
-		    double alt = solution.altitude;
-
-		    coTransform->Transform(1, &lo, &la, &alt);
-		    base::samples::RigidBodyState pos;
-		    pos.time = gps.position.time;
-		    pos.position.x() = lo - _origin.value().x();
-		    pos.position.y() = la - _origin.value().y();
-		    pos.position.z() = alt - _origin.value().z();
-		    pos.cov_position(0, 0) = gps.errors.deviationLongitude * gps.errors.deviationLongitude;
-		    pos.cov_position(1, 1) = gps.errors.deviationLatitude * gps.errors.deviationLatitude;
-		    pos.cov_position(2, 2) = gps.errors.deviationAltitude * gps.errors.deviationAltitude;
-                    _position_samples.write(pos);
-		}
-            }
+	        update(solution);	
+             }
 
             if (gps.solutionQuality.time > last_constellation_update &&
                     gps.satellites.time > last_constellation_update)
@@ -265,8 +223,7 @@ void Task::updateHook()
                 ConstellationInfo info;
                 info.quality    = gps.solutionQuality;
                 info.satellites = gps.satellites;
-                _constellation.write(info);
-                last_constellation_update = base::Time::now();
+                updateConstallation(info);
             }
         }
         catch(timeout_error) {

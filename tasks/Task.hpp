@@ -4,25 +4,19 @@
 #include "dgps/TaskBase.hpp"
 #include "dgps.hh"
 
-class OGRCoordinateTransformation;
-
 namespace RTT
 {
     class FileDescriptorActivity;
 }
-
 
 namespace dgps {
 	class Task : public TaskBase
     {
     private:
 	DGPS gps;
-	OGRCoordinateTransformation *coTransform;
         friend class TaskBase;
     protected:
 
-        base::Time last_update;
-        base::Time last_constellation_update;
         int openSocket(std::string const& port);
         int correction_socket;
 
