@@ -1,14 +1,8 @@
 #include "BaseTask.hpp"
 
-#include <rtt/NonPeriodicActivity.hpp>
 #include <ogr_spatialref.h>
 
-using namespace dgps;
-using namespace RTT;
-
-RTT::NonPeriodicActivity* BaseTask::getNonPeriodicActivity()
-{ return dynamic_cast< RTT::NonPeriodicActivity* >(getActivity().get()); }
-
+using namespace gps;
 
 BaseTask::BaseTask(std::string const& name, TaskCore::TaskState initial_state)
     : BaseTaskBase(name, initial_state)
@@ -37,23 +31,14 @@ bool BaseTask::configureHook()
 
     if( coTransform == NULL )
     {
-	RTT::log(Error) << "failed to initialize CoordinateTransform UTM_ZONE:" << _utm_zone << " UTM_NORTH:" << _utm_north << RTT::endlog();
+	RTT::log(RTT::Error) << "failed to initialize CoordinateTransform UTM_ZONE:" << _utm_zone << " UTM_NORTH:" << _utm_north << RTT::endlog();
 	return false;
     }
     return true;
 }
 bool BaseTask::startHook()
 {
-    last_update = base::Time();                
-    last_constellation_update = base::Time();
     return true;
-}
-
-
-void BaseTask::updateConstallation(const ConstellationInfo &info)
-{
-   _constellation.write(info);
-   last_constellation_update = base::Time::now();
 }
 
 void BaseTask::update(const gps::Solution &solution)

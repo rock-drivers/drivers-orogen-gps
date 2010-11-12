@@ -1,29 +1,20 @@
-#ifndef DGPS_GPSDTASK_TASK_HPP
-#define DGPS_GPSDTASK_TASK_HPP
+#ifndef GPS_GPSDTASK_TASK_HPP
+#define GPS_GPSDTASK_TASK_HPP
 
-#include "dgps/GPSDTaskBase.hpp"
-#include <libgpsmm.h>
+#include "gps/GPSDTaskBase.hpp"
 
-namespace RTT
-{
-    class NonPeriodicActivity;
-}
-
-
-namespace dgps {
+class gpsmm;
+namespace gps {
     class GPSDTask : public GPSDTaskBase
     {
         friend class GPSDTaskBase;
     protected:
-        gpsmm gpsd_daemon;
+        gpsmm* gpsd_daemon;
         int counter;
 
-    
-
     public:
-        GPSDTask(std::string const& name = "dgps::GPSDTask", TaskCore::TaskState initial_state = Stopped);
-
-        RTT::NonPeriodicActivity* getNonPeriodicActivity();
+        GPSDTask(std::string const& name = "gps::GPSDTask", TaskCore::TaskState initial_state = Stopped);
+        ~GPSDTask();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the

@@ -1,9 +1,8 @@
-PROJECT(dgps)
+PROJECT(gps)
 cmake_minimum_required(VERSION 2.6)
-SET(CMAKE_VERBOSE_MAKEFILE ON)
 
 SET (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/.orogen/config")
-INCLUDE(dgpsBase)
+INCLUDE(gpsBase)
 
 # FIND_PACKAGE(KDL)
 # FIND_PACKAGE(OCL)

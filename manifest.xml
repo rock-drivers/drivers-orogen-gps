@@ -11,13 +11,18 @@
         Sylvain Joyeux/sylvain.joyeux@m4x.org
     </copyright>
   <license>GPL v2 or later</license>
-  <rosdep name="gdal"/>
+
   <!-- PROJ.4 is required by GDAL to support long/lat to UTM convertions -->
-  <rosdep name="proj"/>
+  <depend package="gdal"/>
+  <depend package="proj"/>
+
+  <!-- for the GPSd driver -->
   <depend package="libgps"/>
-  <depend package="drivers/dgps"/>
-  <depend package="orocos/base"/>
-  <depend package="orocos/logger"/>
-  <depend package="orocos/orogen"/>
-  <depend package="orocos/rtt"/>
+
+  <!-- for the MB500 driver -->
+  <depend package="drivers/mb500"/>
+
+  <depend package="modules/base"/>
+  <depend package="modules/logger"/>
+  <depend package="orogen"/>
 </package>

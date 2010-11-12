@@ -1,30 +1,24 @@
-#ifndef DGPS_TASK_TASK_HPP
-#define DGPS_TASK_TASK_HPP
+#ifndef GPS_MB500TASK_TASK_HPP
+#define GPS_MB500TASK_TASK_HPP
 
-#include "dgps/TaskBase.hpp"
-#include "dgps.hh"
+#include "gps/MB500TaskBase.hpp"
 
-namespace RTT
-{
-    class FileDescriptorActivity;
-}
-
-namespace dgps {
-	class Task : public TaskBase
+namespace gps {
+    class MB500;
+    class MB500Task : public MB500TaskBase
     {
     private:
-	DGPS gps;
+	MB500* driver;
         friend class TaskBase;
     protected:
 
         int openSocket(std::string const& port);
         int correction_socket;
+        base::Time last_constellation_update;
 
     public:
-        Task(std::string const& name = "dgps::Task");
-        ~Task();
-
-        RTT::FileDescriptorActivity* getFileDescriptorActivity();
+        MB500Task(std::string const& name = "gps::MB500Task");
+        ~MB500Task();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the
@@ -65,9 +59,6 @@ namespace dgps {
          *
          */
         void updateHook();
-		bool getSatelliteInformation();
-		bool isgetSatelliteInformationCompleted();
-
 
         /** This hook is called by Orocos when the component is in the
          * RunTimeError state, at each activity step. See the discussion in

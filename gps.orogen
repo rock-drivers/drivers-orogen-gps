@@ -1,26 +1,20 @@
-name 'dgps'
+name 'gps'
 version 0.1
 
-using_library 'dgps'
+using_library 'mb500'
 using_library 'libgps'
-import_types_from 'base'
-import_types_from 'dgpstypes.hh'
-import_types_from 'dgpsModuleTypes.hpp'
-type_export_policy :used
 
+import_types_from 'base'
+# We get our interface types from the mb500 library even for the gpsd driver
+import_types_from 'gps_types.hh'
+import_types_from 'mb500_types.hh'
 
 task_context 'BaseTask' do
 	output_port('solution', '/gps/Solution').
             doc "the GPS solution as reported by the hardware"
 
-	output_port('constellation', '/dgps/ConstellationInfo').
-            doc "the status of the GPS constellation"
-
 	output_port('position_samples', '/wrappers/samples/RigidBodyState').
             doc "computed position in m, in the UTM coordinate provided and local to the origin"
-
-	output_port('time', '/gps/Time').
-            doc "output the real time, cpu time and dgps processing latency"
 
 	property("utm_zone", "int", 32).
 	    doc "UTM zone for conversion of WGS84 to UTM"
@@ -28,6 +22,8 @@ task_context 'BaseTask' do
 	    doc "UTM north for conversion of WGS84 to UTM"
 	property("origin", "/wrappers/Position").
 	    doc "Origin in UTM coordinates, that is used for position readings." 
+
+        error_states :IO_ERROR, :IO_TIMEOUT
 end
 
 #task that is using gpsd daemon
@@ -38,10 +34,11 @@ task_context 'GPSDTask' do
 end
 
 #task that is using NMEA
-task_context 'Task' do
+task_context 'MB500Task' do
         subclasses 'BaseTask'
 	needs_configuration
 	fd_driven
+        required_activity :fd_driven
 	
 	property("device", "/std/string").
             doc "the device file used to connect to the gps"
@@ -51,20 +48,26 @@ task_context 'Task' do
             doc "the port (A, B, C, D or a number) at which the board gets correction data note, number means it is getting the correction data s UDP packets to port X"
         property("period",   "double").
             doc "the update period"
-        property("fix_threshold", "/gps/AMBIGUITY_THRESHOLD", :FIX_99_0).
+        property("fix_threshold", "/gps/MB500_AMBIGUITY_THRESHOLD", :MB500_FIX_99_0).
             doc "the threshold at which the RTK engine will switch to FIX mode"
-        property("dynamics_model", "/gps/DYNAMICS_MODEL").
+        property("dynamics_model", "/gps/MB500_DYNAMICS_MODEL").
 	    doc "Model of the receiver dynamics" 
-	property("user_dynamics", "/dgps/UserDynamics").
+	property("user_dynamics", "/gps/UserDynamics").
 	    doc "If set, the module will put the board in USER_DYNAMICS mode with these values"
         property("ntpd_shm_unit",   "int", -1).
             doc "The ntpd shm driver unit to use, -1 for not using one at all. 0 and 1 are reserved for root"
+
+	output_port('constellation', '/gps/ConstellationInfo').
+            doc "the status of the GPS constellation"
+
+	output_port('time', '/gps/Time').
+            doc "output the real time, cpu time and dgps processing latency"
 end
 
 
-deployment "test_dgps" do
+deployment "test_mb500" do
     do_not_install
-    gps_task = task("Task", "Task")
+    gps_task = task("Task", "MB500Task")
 
     add_default_logger
     if !corba_enabled?

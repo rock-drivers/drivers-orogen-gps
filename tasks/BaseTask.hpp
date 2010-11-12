@@ -9,42 +9,29 @@
  * Base Class for orogen GPS Drivers
  */
 
-#ifndef DGPS_BASETASK_TASK_HPP
-#define DGPS_BASETASK_TASK_HPP
+#ifndef GPS_BASETASK_TASK_HPP
+#define GPS_BASETASK_TASK_HPP
 
-#include "dgps/BaseTaskBase.hpp"
+#include "gps/BaseTaskBase.hpp"
 
 class OGRCoordinateTransformation;
 
-namespace RTT
-{
-    class NonPeriodicActivity;
-}
-
-
-namespace dgps {
+namespace gps {
     class BaseTask : public BaseTaskBase
     {
 	friend class BaseTaskBase;
     protected:
     	OGRCoordinateTransformation *coTransform;
         base::Time last_update;
-        base::Time last_constellation_update;
 
     protected:
-        /*
-         * Updates the constellation of the satellites
-         */
-        void updateConstallation(const ConstellationInfo &info);
-
         /*
          * Updates the solution and calculates the position in UTM coordinates
          */
         void update(const gps::Solution &solution);
-    public:
-        BaseTask(std::string const& name = "dgps::BaseTask", TaskCore::TaskState initial_state = Stopped);
 
-        RTT::NonPeriodicActivity* getNonPeriodicActivity();
+    public:
+        BaseTask(std::string const& name = "gps::BaseTask", TaskCore::TaskState initial_state = Stopped);
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the

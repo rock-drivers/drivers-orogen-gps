@@ -1,5 +1,6 @@
-#include "Task.hpp"
-#include <rtt/FileDescriptorActivity.hpp>
+#include "MB500Task.hpp"
+#include <mb500.hh>
+#include <rtt/extras/FileDescriptorActivity.hpp>
 
 #include <iostream>
 #include <errno.h>
@@ -9,23 +10,20 @@
 #include <fcntl.h>
 
 using namespace std;
-using namespace dgps;
-using namespace RTT;
+using namespace gps;
+using RTT::Error;
 
-RTT::FileDescriptorActivity* Task::getFileDescriptorActivity()
-{ return dynamic_cast< RTT::FileDescriptorActivity* >(getActivity().get()); }
-
-Task::Task(std::string const& name)
-    : TaskBase(name)
+MB500Task::MB500Task(std::string const& name)
+    : MB500TaskBase(name)
 {
     _period.set(1);
-    _dynamics_model.set(gps::ADAPTIVE);
+    _dynamics_model.set(gps::MB500_ADAPTIVE);
     _ntpd_shm_unit.set(-1);
 }
 
-Task::~Task() {}
+MB500Task::~MB500Task() {}
 
-int Task::openSocket(std::string const& port)
+int MB500Task::openSocket(std::string const& port)
 {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -73,13 +71,16 @@ int Task::openSocket(std::string const& port)
     return sfd;
 }
 
-bool Task::configureHook()
+bool MB500Task::configureHook()
 {
     if(!BaseTask::configureHook())
       return false;
 
     try {
-        if (!gps.openRover(_device))
+        RTT::extras::FileDescriptorActivity* fd_activity =
+            getActivity<RTT::extras::FileDescriptorActivity>();
+
+        if (!driver->openRover(_device))
         {
             RTT::log(Error) << "failed to initialize rover mode" << RTT::endlog();
             return false;
@@ -102,8 +103,8 @@ bool Task::configureHook()
             correction_input_port = _port;
         }
 
-        gps::AMBIGUITY_THRESHOLD threshold = _fix_threshold.get();
-        if (!gps.setFixThreshold(threshold))
+        gps::MB500_AMBIGUITY_THRESHOLD threshold = _fix_threshold.get();
+        if (!driver->setFixThreshold(threshold))
         {
             RTT::log(Error) << "failed to change RTK_FIX ambiguity threshold" << RTT::endlog();
             return false;
@@ -112,13 +113,13 @@ bool Task::configureHook()
         UserDynamics dynamics = _user_dynamics.get();
         if (dynamics.hSpeed)
         {
-            gps.setUserDynamics(dynamics.hSpeed, dynamics.hAccel, dynamics.vSpeed, dynamics.vAccel);
-            gps.setReceiverDynamics(gps::USER_DEFINED);
+            driver->setUserDynamics(dynamics.hSpeed, dynamics.hAccel, dynamics.vSpeed, dynamics.vAccel);
+            driver->setReceiverDynamics(gps::MB500_USER_DEFINED);
         }
         else
-            gps.setReceiverDynamics(_dynamics_model);
+            driver->setReceiverDynamics(_dynamics_model);
             
-        if(!gps.setRTKInputPort(correction_input_port))
+        if(!driver->setRTKInputPort(correction_input_port))
         {
             RTT::log(Error) << "failed to set RTK input port" << RTT::endlog();
             return false;
@@ -127,12 +128,12 @@ bool Task::configureHook()
         if (socket.get() != -1)
         {
             correction_socket = socket.release();
-            getFileDescriptorActivity()->watch(correction_socket);
+            fd_activity->watch(correction_socket);
         }
 
 	if (_ntpd_shm_unit.get() > -1 && _ntpd_shm_unit.get() < 4)
         {
-	    if (!gps.enableNtpdShm(_ntpd_shm_unit.get()))
+	    if (!driver->enableNtpdShm(_ntpd_shm_unit.get()))
             {
                 RTT::log(Error) << "failed to initialize the NTP SHM" << RTT::endlog();
                 return false;
@@ -140,7 +141,7 @@ bool Task::configureHook()
         }
 
         // start device
-        getFileDescriptorActivity()->watch(gps.getFileDescriptor());
+        fd_activity->watch(driver->getFileDescriptor());
 
     } catch(timeout_error) {
         RTT::log(Error) << "timeout during board configuration" << RTT::endlog();
@@ -150,14 +151,14 @@ bool Task::configureHook()
 }
 
 
-bool Task::startHook()
+bool MB500Task::startHook()
 {
     if (!BaseTask::startHook())
         return false;
-    return gps.setPeriodicData(_port, _period);
+    return driver->setPeriodicData(_port, _period);
 }
 
-void Task::updateHook()
+void MB500Task::updateHook()
 {
     char buffer[1024];
     static base::Time last_rate_display; // to display correction byterate
@@ -167,11 +168,13 @@ void Task::updateHook()
         last_rate_display= base::Time::now();
     base::Time now = base::Time::now();
     
-    RTT::FileDescriptorActivity* fd_activity =
-        dynamic_cast<RTT::FileDescriptorActivity*>(getActivity().get());
+    RTT::extras::FileDescriptorActivity* fd_activity =
+        getActivity<RTT::extras::FileDescriptorActivity>();
 
-    if (fd_activity->hasError())
-        return BaseTask::error();
+    if (fd_activity->hasTimeout())
+        return exception(IO_TIMEOUT);
+    else if (fd_activity->hasError())
+        return exception(IO_ERROR);
 
     if (correction_socket != -1 && fd_activity->isUpdated(correction_socket))
     {
@@ -180,50 +183,51 @@ void Task::updateHook()
         if (rd > 0)
         {
             //std::cout << base::Time::now().toMilliseconds() << " got " << rd << " bytes of correction data" << std::endl;
-            gps.writeCorrectionData(buffer, rd, 1000);
+            driver->writeCorrectionData(buffer, rd, 1000);
             corrections_rx += rd;
         }
 
     }
     
-    if (fd_activity->isUpdated(gps.getFileDescriptor()))
+    if (fd_activity->isUpdated(driver->getFileDescriptor()))
     {
         try {
-            gps.collectPeriodicData();
+            driver->collectPeriodicData();
 
-	    if (!gps.cpu_time.isNull())
+	    if (!driver->cpu_time.isNull())
 	    {
 	        gps::Time time;
-	        time.cpu_time		=gps.cpu_time; 
-	        time.gps_time		=gps.real_time;
-	        time.processing_latency	=gps.processing_latency;
+	        time.cpu_time		=driver->cpu_time; 
+	        time.gps_time		=driver->real_time;
+	        time.processing_latency	=driver->processing_latency;
 	        _time.write(time); 
 	    }
 	    
-            if (last_update < gps.position.time && gps.position.time == gps.errors.time)
+            if (last_update < driver->position.time && driver->position.time == driver->errors.time)
             {
                 gps::Solution solution;
-                solution.time                    = gps.position.time;
-                solution.latitude                     = gps.position.latitude;
-                solution.longitude                    = gps.position.longitude;
-                solution.positionType                 = gps.position.positionType;
-                solution.noOfSatellites               = gps.position.noOfSatellites;
-                solution.altitude                     = gps.position.altitude;
-                solution.geoidalSeparation            = gps.position.geoidalSeparation;
-                solution.ageOfDifferentialCorrections = gps.position.ageOfDifferentialCorrections;
-                solution.deviationLatitude            = gps.errors.deviationLatitude;
-                solution.deviationLongitude           = gps.errors.deviationLongitude;
-                solution.deviationAltitude            = gps.errors.deviationAltitude;
+                solution.time                    = driver->position.time;
+                solution.latitude                     = driver->position.latitude;
+                solution.longitude                    = driver->position.longitude;
+                solution.positionType                 = driver->position.positionType;
+                solution.noOfSatellites               = driver->position.noOfSatellites;
+                solution.altitude                     = driver->position.altitude;
+                solution.geoidalSeparation            = driver->position.geoidalSeparation;
+                solution.ageOfDifferentialCorrections = driver->position.ageOfDifferentialCorrections;
+                solution.deviationLatitude            = driver->errors.deviationLatitude;
+                solution.deviationLongitude           = driver->errors.deviationLongitude;
+                solution.deviationAltitude            = driver->errors.deviationAltitude;
 	        update(solution);	
              }
 
-            if (gps.solutionQuality.time > last_constellation_update &&
-                    gps.satellites.time > last_constellation_update)
+            if (driver->solutionQuality.time > last_constellation_update &&
+                    driver->satellites.time > last_constellation_update)
             {
                 ConstellationInfo info;
-                info.quality    = gps.solutionQuality;
-                info.satellites = gps.satellites;
-                updateConstallation(info);
+                info.quality    = driver->solutionQuality;
+                info.satellites = driver->satellites;
+                _constellation.write(info);
+                last_constellation_update = base::Time::now();
             }
         }
         catch(timeout_error) {
@@ -235,26 +239,30 @@ void Task::updateHook()
     float duration = (now -last_rate_display).toSeconds();
     if (duration > 1)
     {
-        std::cout << base::Time::now().toMilliseconds() << " good: " << gps.getStats().good_rx << ", bad: " << gps.getStats().bad_rx << ", corrections: " << corrections_rx / duration << " bytes/s" << std::endl;
+        std::cout << base::Time::now().toMilliseconds() << " good: " << driver->getStats().good_rx << ", bad: " << driver->getStats().bad_rx << ", corrections: " << corrections_rx / duration << " bytes/s" << std::endl;
         last_rate_display= now;
         corrections_rx = 0;
-        gps.resetStats();
+        driver->resetStats();
     }
 }
 
-// void Task::errorHook()
+// void MB500Task::errorHook()
 // {
 // }
 
-void Task::stopHook()
+void MB500Task::stopHook()
 {
-    gps.stopPeriodicData();
+    driver->stopPeriodicData();
 }
 
-void Task::cleanupHook()
+void MB500Task::cleanupHook()
 {
+    RTT::extras::FileDescriptorActivity* fd_activity =
+        getActivity<RTT::extras::FileDescriptorActivity>();
+    fd_activity->clearAllWatches();
+
     if (correction_socket != -1)
         close(correction_socket);
-    gps.close();
+    driver->close();
 }
 
