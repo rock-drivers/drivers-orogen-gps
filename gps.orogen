@@ -13,14 +13,14 @@ task_context 'BaseTask' do
 	output_port('solution', '/gps/Solution').
             doc "the GPS solution as reported by the hardware"
 
-	output_port('position_samples', '/wrappers/samples/RigidBodyState').
+	output_port('position_samples', '/base/samples/RigidBodyState').
             doc "computed position in m, in the UTM coordinate provided and local to the origin"
 
 	property("utm_zone", "int", 32).
 	    doc "UTM zone for conversion of WGS84 to UTM"
 	property("utm_north", "bool", true).
 	    doc "UTM north for conversion of WGS84 to UTM"
-	property("origin", "/wrappers/Position").
+	property("origin", "/base/Position").
 	    doc "Origin in UTM coordinates, that is used for position readings." 
 
         error_states :IO_ERROR, :IO_TIMEOUT
