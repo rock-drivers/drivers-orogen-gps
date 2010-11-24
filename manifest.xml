@@ -22,7 +22,7 @@
   <!-- for the MB500 driver -->
   <depend package="drivers/mb500"/>
 
-  <depend package="modules/base"/>
-  <depend package="modules/logger"/>
+  <depend package="base/orogen/types"/>
+  <depend package="tools/logger"/>
   <depend package="orogen"/>
 </package>
