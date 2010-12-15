@@ -14,7 +14,7 @@ using namespace gps;
 using RTT::Error;
 
 MB500Task::MB500Task(std::string const& name)
-    : MB500TaskBase(name)
+    : MB500TaskBase(name), driver(new gps::MB500)
 {
     _period.set(1);
     _dynamics_model.set(gps::MB500_ADAPTIVE);
