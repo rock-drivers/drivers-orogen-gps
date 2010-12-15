@@ -73,13 +73,18 @@ int MB500Task::openSocket(std::string const& port)
 
 bool MB500Task::configureHook()
 {
-    if(!BaseTask::configureHook())
+    if (!MB500TaskBase::configureHook())
       return false;
 
-    try {
-        RTT::extras::FileDescriptorActivity* fd_activity =
-            getActivity<RTT::extras::FileDescriptorActivity>();
+    RTT::extras::FileDescriptorActivity* fd_activity =
+        getActivity<RTT::extras::FileDescriptorActivity>();
+    if (!fd_activity)
+    {
+        RTT::log(Error) << "the MB500Task requires a FD activity" << RTT::endlog();
+        return false;
+    }
 
+    try {
         if (!driver->openRover(_device))
         {
             RTT::log(Error) << "failed to initialize rover mode" << RTT::endlog();
@@ -125,11 +130,7 @@ bool MB500Task::configureHook()
             return false;
         }
 
-        if (socket.get() != -1)
-        {
-            correction_socket = socket.release();
-            fd_activity->watch(correction_socket);
-        }
+        correction_socket = socket.release();
 
 	if (_ntpd_shm_unit.get() > -1 && _ntpd_shm_unit.get() < 4)
         {
@@ -139,10 +140,6 @@ bool MB500Task::configureHook()
                 return false;
             }
         }
-
-        // start device
-        fd_activity->watch(driver->getFileDescriptor());
-
     } catch(timeout_error) {
         RTT::log(Error) << "timeout during board configuration" << RTT::endlog();
         return false;
@@ -153,8 +150,15 @@ bool MB500Task::configureHook()
 
 bool MB500Task::startHook()
 {
-    if (!BaseTask::startHook())
+    if (!MB500TaskBase::startHook())
         return false;
+
+    RTT::extras::FileDescriptorActivity* fd_activity =
+        getActivity<RTT::extras::FileDescriptorActivity>();
+    if (correction_socket != -1)
+        fd_activity->watch(correction_socket);
+    fd_activity->watch(driver->getFileDescriptor());
+
     return driver->setPeriodicData(_port, _period);
 }
 
@@ -252,15 +256,15 @@ void MB500Task::updateHook()
 
 void MB500Task::stopHook()
 {
+    RTT::extras::FileDescriptorActivity* fd_activity =
+        getActivity<RTT::extras::FileDescriptorActivity>();
+    fd_activity->clearAllWatches();
+
     driver->stopPeriodicData();
 }
 
 void MB500Task::cleanupHook()
 {
-    RTT::extras::FileDescriptorActivity* fd_activity =
-        getActivity<RTT::extras::FileDescriptorActivity>();
-    fd_activity->clearAllWatches();
-
     if (correction_socket != -1)
         close(correction_socket);
     driver->close();
