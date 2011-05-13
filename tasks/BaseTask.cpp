@@ -11,6 +11,13 @@ BaseTask::BaseTask(std::string const& name, TaskCore::TaskState initial_state)
   _utm_north.set(true);
 }
 
+BaseTask::BaseTask(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state)
+    : BaseTaskBase(name, engine, initial_state)
+{
+  _utm_zone.set(32);
+  _utm_north.set(true);
+}
+
 
 /// The following lines are template definitions for the various state machine
 // hooks defined by Orocos::RTT. See BaseTask.hpp for more detailed
