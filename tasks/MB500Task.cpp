@@ -118,11 +118,25 @@ bool MB500Task::configureHook()
         UserDynamics dynamics = _user_dynamics.get();
         if (dynamics.hSpeed)
         {
-            driver->setUserDynamics(dynamics.hSpeed, dynamics.hAccel, dynamics.vSpeed, dynamics.vAccel);
-            driver->setReceiverDynamics(gps::MB500_USER_DEFINED);
+            if(!driver->setUserDynamics(dynamics.hSpeed, dynamics.hAccel, dynamics.vSpeed, dynamics.vAccel))
+	    {
+		RTT::log(Error) << "failed to set user dynamics" << RTT::endlog();
+		return false;
+	    }
+            if(!driver->setReceiverDynamics(gps::MB500_USER_DEFINED))
+	    {
+		RTT::log(Error) << "failed to set receiver dynamics" << RTT::endlog();
+		return false;
+	    }
         }
         else
-            driver->setReceiverDynamics(_dynamics_model);
+	{
+            if(!driver->setReceiverDynamics(_dynamics_model))
+	    {
+		RTT::log(Error) << "failed to set receiver dynamics" << RTT::endlog();
+		return false;
+	    }
+	}
             
         if(!driver->setRTKInputPort(correction_input_port))
         {
