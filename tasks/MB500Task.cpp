@@ -173,7 +173,12 @@ bool MB500Task::startHook()
         fd_activity->watch(correction_socket);
     fd_activity->watch(driver->getFileDescriptor());
 
-    return driver->setPeriodicData(_port, _period);
+    if(!driver->setPeriodicData(_port, _period))
+    {
+	fd_activity->clearAllWatches();
+	return false;
+    }
+    return true;
 }
 
 void MB500Task::updateHook()
