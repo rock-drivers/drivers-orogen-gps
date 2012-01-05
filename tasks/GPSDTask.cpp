@@ -5,13 +5,12 @@ using namespace gps;
 
 GPSDTask::GPSDTask(std::string const& name, TaskCore::TaskState initial_state)
     : GPSDTaskBase(name, initial_state)
-    , gpsd_daemon(new gpsmm)
+    , gpsd_daemon(0)
 {
 }
 
 GPSDTask::~GPSDTask()
 {
-  delete gpsd_daemon;
 }
 
 /// The following lines are template definitions for the various state machine
@@ -23,6 +22,10 @@ bool GPSDTask::configureHook()
   if(!BaseTask::configureHook())
     return false;
 
+#if GPSD_API_MAJOR_VERSION >= 5
+  gpsd_daemon = new gpsmm(_hostname.value().c_str(),"2947");
+#else
+  gpsd_daemon = new gpsmm;
   gps_data_t* pdata = gpsd_daemon->open(_hostname.value().c_str(),"2947");
   if (pdata)
   {
@@ -33,6 +36,7 @@ bool GPSDTask::configureHook()
       std::cerr << "Error cannot find gpsd deamon"<< std::endl;
       return false;
   }
+#endif
   gpsd_daemon->stream(WATCH_ENABLE);
   return true;
 }
@@ -48,9 +52,13 @@ bool GPSDTask::startHook()
 
 void GPSDTask::updateHook()
 {
-  if(gpsd_daemon->waiting())
+  if(gpsd_daemon->waiting(0))
   {
+#if GPSD_API_MAJOR_VERSION >= 5
+      gps_data_t* pdata = gpsd_daemon->read();
+#else
       gps_data_t* pdata = gpsd_daemon->poll();
+#endif
       if (pdata) 
       {
         counter = 0;
@@ -116,7 +124,9 @@ void GPSDTask::updateHook()
 // void GPSDTask::stopHook()
 // {
 // }
-// void GPSDTask::cleanupHook()
-// {
-// }
+void GPSDTask::cleanupHook()
+{
+  delete gpsd_daemon;
+  gpsd_daemon = 0;
+}
 
