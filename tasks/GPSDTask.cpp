@@ -52,11 +52,13 @@ bool GPSDTask::startHook()
 
 void GPSDTask::updateHook()
 {
+#if GPSD_API_MAJOR_VERSION >= 5
   if(gpsd_daemon->waiting(0))
   {
-#if GPSD_API_MAJOR_VERSION >= 5
       gps_data_t* pdata = gpsd_daemon->read();
 #else
+  if(gpsd_daemon->waiting())
+  {
       gps_data_t* pdata = gpsd_daemon->poll();
 #endif
       if (pdata) 
