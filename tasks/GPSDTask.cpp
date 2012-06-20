@@ -3,8 +3,8 @@
 
 using namespace gps;
 
-GPSDTask::GPSDTask(std::string const& name, TaskCore::TaskState initial_state)
-    : GPSDTaskBase(name, initial_state)
+GPSDTask::GPSDTask(std::string const& name)
+    : GPSDTaskBase(name)
     , gpsd_daemon(0)
 {
 }

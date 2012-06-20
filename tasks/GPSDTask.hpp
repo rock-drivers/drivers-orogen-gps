@@ -13,7 +13,7 @@ namespace gps {
         int counter;
 
     public:
-        GPSDTask(std::string const& name = "gps::GPSDTask", TaskCore::TaskState initial_state = Stopped);
+        GPSDTask(std::string const& name = "gps::GPSDTask");
         ~GPSDTask();
 
         /** This hook is called by Orocos when the state machine transitions

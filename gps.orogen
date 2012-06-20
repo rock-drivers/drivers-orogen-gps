@@ -29,6 +29,8 @@ end
 #task that is using gpsd daemon
 task_context 'GPSDTask' do
         subclasses 'BaseTask'
+	needs_configuration
+
         property("hostname", "string","localhost").
             doc "hostname where the gps daemon is running"
 end
