@@ -33,6 +33,10 @@ task_context 'GPSDTask' do
 
         property("hostname", "string","localhost").
             doc "hostname where the gps daemon is running"
+        
+        #need to be peirodic because there is no FD
+        periodic(0.1)
+
 end
 
 #task that is using NMEA
