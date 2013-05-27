@@ -24,6 +24,7 @@ task_context 'BaseTask' do
 	    doc "Origin in UTM coordinates, that is used for position readings." 
 
         error_states :IO_ERROR, :IO_TIMEOUT
+        periodic 0.1
 end
 
 #task that is using gpsd daemon
