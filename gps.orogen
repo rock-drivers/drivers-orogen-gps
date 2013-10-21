@@ -70,25 +70,3 @@ task_context 'MB500Task' do
 	output_port('time', '/gps/Time').
             doc "output the real time, cpu time and dgps processing latency"
 end
-
-
-deployment "test_mb500" do
-    do_not_install
-    gps_task = task("Task", "MB500Task")
-
-    add_default_logger
-    if !corba_enabled?
-        browse gps_task
-    end
-end
-
-deployment "test_gpsd" do
-    do_not_install
-    gps_task = task("Task", "GPSDTask").
-      periodic 0.1
-
-    add_default_logger
-    if !corba_enabled?
-        browse gps_task
-    end
-end
