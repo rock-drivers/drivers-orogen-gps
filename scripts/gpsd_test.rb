@@ -5,7 +5,7 @@ Orocos.initialize
 
 #widget_grid = WidgetGrid.new
 
-Orocos.run 'test_gpsd' do
+Orocos.run 'gps::GPSDTask'=> 'Task' do
   gpsd = Orocos::TaskContext.get 'Task'
   gpsd.hostname ='localhost'
 
