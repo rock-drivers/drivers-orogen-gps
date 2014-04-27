@@ -262,7 +262,7 @@ void MB500Task::updateHook()
     float duration = (now -last_rate_display).toSeconds();
     if (duration > 1)
     {
-        std::cout << base::Time::now().toMilliseconds() << " good: " << driver->getStats().good_rx << ", bad: " << driver->getStats().bad_rx << ", corrections: " << corrections_rx / duration << " bytes/s" << std::endl;
+//        std::cout << base::Time::now().toMilliseconds() << " good: " << driver->getStats().good_rx << ", bad: " << driver->getStats().bad_rx << ", corrections: " << corrections_rx / duration << " bytes/s" << std::endl;
         last_rate_display= now;
         corrections_rx = 0;
         driver->resetStats();
