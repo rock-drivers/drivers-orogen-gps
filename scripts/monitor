@@ -7,17 +7,26 @@ def monitor_gps(task)
     
     solution_reader      = task.solution.reader
     constellation_reader = task.constellation.reader
+    pos_reader = task.position_samples.reader
 
-    STDERR.puts "Type | dLat dLong dAlt | Used usedMinSNR PDOP Tracked trackedMinSNR Known"
+    STDERR.puts "Type | PosX PosY PosZ | dLat dLong dAlt | Used usedMinSNR PDOP Tracked trackedMinSNR Known"
     while true
         solution = solution_reader.read
         constellation = constellation_reader.read
+	pos = pos_reader.read
 
         if p && !p.alive?
             raise "module crashed"
         end
 
         info = "%s " % [task.state.to_s]
+	if pos
+            info << " | %2.2f %2.2f %2.2f | " % [
+                pos.position.x,
+                pos.position.y,
+                pos.position.z]
+	end
+
         if solution
             info << "%s | %2.2f %2.2f %2.2f | %i " % [
                 solution.positionType.to_s,

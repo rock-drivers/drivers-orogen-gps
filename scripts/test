@@ -1,32 +1,21 @@
 #! /usr/bin/env ruby
 
+require 'rock/bundle'
 require 'orocos'
-require 'monitor_gps'
+require './monitor_gps.rb'
 include Orocos
 
-if ARGV.size < 2 || ARGV.size > 3
-    STDERR.puts "scripts/test device task_port [correction_port]"
-    exit 1
-end
+Bundles.initialize
 
-BASE_DIR = File.expand_path('..', File.dirname(__FILE__))
-ENV['PKG_CONFIG_PATH'] = "#{File.join(BASE_DIR, 'build')}:#{ENV['PKG_CONFIG_PATH']}"
-Orocos.initialize
-
-device_name = ARGV.shift
-task_port   = ARGV.shift
-correction_port = ARGV.shift
-
-Orocos::Process.spawn 'test_dgps', :output => 'dgps-log.txt' do |p|
+Orocos::Process.run 'gps::MB500Task' => 'Task', :output => 'dgps-log.txt' do |p|
     task = p.task('Task')
-    task.device = device_name
-    task.port = task_port # USB port on the board
-    if correction_port
-        task.correction_port = correction_port # UDP port for incoming correction data
-    end
+
+    task.apply_conf(['default'])
 
     task.configure
     task.start
+
+    Orocos.log_all_ports
 
     monitor_gps(task)
 end
