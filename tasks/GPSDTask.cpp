@@ -107,7 +107,7 @@ void GPSDTask::updateHook()
           }
           else
           {         
-              if(++counter > 5){
+              if(++counter > 50){
                     std::cerr << "[Error] poll error, got wrong values more than 100 times in sequence" << std::endl;
                     return exception(IO_ERROR);
               } else {
@@ -118,7 +118,7 @@ void GPSDTask::updateHook()
       else{
         counter++;
         valid = false;
-      }if (counter > 5)
+      }if (counter > 50)
       {
           std::cerr << "[Error] poll error: gpsd is not responding" << std::endl;
           return exception(IO_TIMEOUT);
