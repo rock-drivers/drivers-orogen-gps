@@ -22,8 +22,11 @@ task_context 'BaseTask' do
 	    doc "UTM north for conversion of WGS84 to UTM"
 	property("origin", "/base/Position").
 	    doc "Origin in UTM coordinates, that is used for position readings." 
+	property("max_error_counter", "int", 10).
+            doc "Defines how often the task waits for data before entering IO_TIMEOUT (recoverable) and how often the task tries to read data before entering IO_ERROR"
 
-        error_states :IO_ERROR, :IO_TIMEOUT
+        error_states :IO_ERROR
+        states :IO_TIMEOUT
         periodic 0.1
 end
 

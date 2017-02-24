@@ -6,6 +6,8 @@ using namespace gps;
 GPSDTask::GPSDTask(std::string const& name)
     : GPSDTaskBase(name)
     , gpsd_daemon(0)
+    , counter_waiting(0)
+    , counter_polling(0)
 {
 }
 
@@ -46,14 +48,13 @@ bool GPSDTask::startHook()
   if(!BaseTask::startHook())
     return false;
 
-  counter = 0;
+  counter_waiting = 0;
+  counter_polling = 0;
   return true;
 }
 
 void GPSDTask::updateHook()
 {
- bool valid = true;
- while(valid){
 #if GPSD_API_MAJOR_VERSION >= 5
       if(gpsd_daemon->waiting(0))
       {
@@ -61,11 +62,14 @@ void GPSDTask::updateHook()
 #else
       if(gpsd_daemon->waiting())
       {
+          counter_waiting = 0;
           gps_data_t* pdata = gpsd_daemon->poll();
 #endif
           if (pdata) 
           {
-            counter = 0;
+            counter_polling = 0;
+            state(RUNNING);
+            
             gps::Solution solution;
             solution.altitude =  pdata->fix.altitude;
             solution.latitude =  pdata->fix.latitude;
@@ -103,27 +107,26 @@ void GPSDTask::updateHook()
             update(solution);
             // at the moment no constallation info is saved
             //
-
           }
           else
           {         
-              if(++counter > 50){
-                    std::cerr << "[Error] poll error, got wrong values more than 100 times in sequence" << std::endl;
+              if(++counter_polling > _max_error_counter) {
+                    std::cerr << "[Error] poll error" << std::endl;
                     return exception(IO_ERROR);
               } else {
-                    std::cerr << "[Warning] poll error, got wrong values (" << counter << " times)" << std::endl;
+                    std::cerr << "[Warning] poll error, got wrong values (" << 
+                        counter_polling << "/" << _max_error_counter << " times)" << std::endl;
+                    sleep(1);
               }
           }
-      }
-      else{
-        counter++;
-        valid = false;
-      }if (counter > 50)
-      {
-          std::cerr << "[Error] poll error: gpsd is not responding" << std::endl;
-          return exception(IO_TIMEOUT);
-      }
-  }
+      } else {
+        counter_waiting++;
+        if (counter_waiting == _max_error_counter) {
+          std::cerr << "[Warning] poll error: gpsd is not responding" << std::endl;
+          state(IO_TIMEOUT);
+        }
+        sleep(1);
+      } 
 }
 
 

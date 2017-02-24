@@ -10,7 +10,8 @@ namespace gps {
         friend class GPSDTaskBase;
     protected:
         gpsmm* gpsd_daemon;
-        int counter;
+        int counter_waiting;
+        int counter_polling;
 
     public:
         GPSDTask(std::string const& name = "gps::GPSDTask");
