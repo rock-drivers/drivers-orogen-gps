@@ -68,7 +68,8 @@ void GPSDTask::updateHook()
           if (pdata) 
           {
             counter_polling = 0;
-            state(RUNNING);
+            if(state() != RUNNING)
+                state(RUNNING);
             
             gps_base::Solution solution;
             solution.altitude =  pdata->fix.altitude;
@@ -123,7 +124,8 @@ void GPSDTask::updateHook()
         counter_waiting++;
         if (counter_waiting == _max_error_counter) {
           std::cerr << "[Warning] poll error: gpsd is not responding" << std::endl;
-          state(IO_TIMEOUT);
+          if(state() != IO_TIMEOUT)
+              state(IO_TIMEOUT);
         }
         sleep(1);
       } 
