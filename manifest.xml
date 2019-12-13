@@ -24,6 +24,7 @@
   <depend package="drivers/mb500"/>
 
   <depend package="base/orogen/types"/>
+  <depend package="drivers/orogen/gps_base"/>
   <depend package="tools/logger"/>
   <depend package="orogen"/>
   <tags>stable</tags>

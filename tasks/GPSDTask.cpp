@@ -70,7 +70,7 @@ void GPSDTask::updateHook()
             counter_polling = 0;
             state(RUNNING);
             
-            gps::Solution solution;
+            gps_base::Solution solution;
             solution.altitude =  pdata->fix.altitude;
             solution.latitude =  pdata->fix.latitude;
             solution.longitude =  pdata->fix.longitude;
@@ -85,23 +85,23 @@ void GPSDTask::updateHook()
             switch(pdata->fix.mode)
             {
             case MODE_NOT_SEEN:
-              solution.positionType = gps::NO_SOLUTION;
+              solution.positionType = gps_base::NO_SOLUTION;
               break;
             
             case MODE_NO_FIX:
-              solution.positionType = gps::NO_SOLUTION;
+              solution.positionType = gps_base::NO_SOLUTION;
               break;
 
             case MODE_2D:
-              solution.positionType = gps::AUTONOMOUS_2D;
+              solution.positionType = gps_base::AUTONOMOUS_2D;
               break;
 
             case MODE_3D:
-              solution.positionType = gps::AUTONOMOUS;
+              solution.positionType = gps_base::AUTONOMOUS;
               break;
 
             default:
-              solution.positionType = gps::INVALID;
+              solution.positionType = gps_base::INVALID;
             }
             solution.ageOfDifferentialCorrections = (int) pdata->status;
             update(solution);

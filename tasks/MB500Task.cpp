@@ -115,7 +115,7 @@ bool MB500Task::configureHook()
             return false;
         }
 
-        UserDynamics dynamics = _user_dynamics.get();
+        gps_base::UserDynamics dynamics = _user_dynamics.get();
         if (dynamics.hSpeed)
         {
             if(!driver->setUserDynamics(dynamics.hSpeed, dynamics.hAccel, dynamics.vSpeed, dynamics.vAccel))
@@ -219,7 +219,7 @@ void MB500Task::updateHook()
 
 	    if (!driver->cpu_time.isNull())
 	    {
-	        gps::Time time;
+	        gps_base::Time time;
 	        time.cpu_time		=driver->cpu_time; 
 	        time.gps_time		=driver->real_time;
 	        time.processing_latency	=driver->processing_latency;
@@ -228,7 +228,7 @@ void MB500Task::updateHook()
 	    
             if (last_update < driver->position.time && driver->position.time == driver->errors.time)
             {
-                gps::Solution solution;
+                gps_base::Solution solution;
                 solution.time                    = driver->position.time;
                 solution.latitude                     = driver->position.latitude;
                 solution.longitude                    = driver->position.longitude;
@@ -246,7 +246,7 @@ void MB500Task::updateHook()
             if (driver->solutionQuality.time > last_constellation_update &&
                     driver->satellites.time > last_constellation_update)
             {
-                ConstellationInfo info;
+                gps_base::ConstellationInfo info;
                 info.quality    = driver->solutionQuality;
                 info.satellites = driver->satellites;
                 _constellation.write(info);
