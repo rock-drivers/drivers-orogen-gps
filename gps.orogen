@@ -5,71 +5,90 @@ using_library 'mb500'
 using_library 'libgps'
 
 import_types_from 'base'
+import_types_from 'gps_base'
 # We get our interface types from the mb500 library even for the gpsd driver
-import_types_from 'gps_types.hh'
 import_types_from 'mb500_types.hh'
 
 task_context 'BaseTask' do
-	output_port('solution', '/gps/Solution').
-            doc "the GPS solution as reported by the hardware"
+    # The GPS solution as reported by the hardware
+    output_port('solution', '/gps_base/Solution')
 
-	output_port('position_samples', '/base/samples/RigidBodyState').
-            doc "computed position in m, in the UTM coordinate provided and local to the origin"
+    # UTM computed position
+    output_port('position_samples', '/base/samples/RigidBodyState')
 
-	property("utm_zone", "int", 32).
-	    doc "UTM zone for conversion of WGS84 to UTM"
-	property("utm_north", "bool", true).
-	    doc "UTM north for conversion of WGS84 to UTM"
-	property("origin", "/base/Position").
-	    doc "Origin in UTM coordinates, that is used for position readings." 
-	property("max_error_counter", "int", 10).
-            doc "Defines how often the task waits for data before entering IO_TIMEOUT (recoverable) and how often the task tries to read data before entering IO_ERROR"
+    # computed position in m, in the NWU frame
+    output_port('nwu_position_samples', '/base/samples/RigidBodyState')
 
-        error_states :IO_ERROR
-        states :IO_TIMEOUT
-        periodic 0.1
+    # The frame of the GPS sensor
+    property('gps_frame', '/std/string', 'gps')
+
+    # The frame of the UTM origin
+    property('utm_frame', '/std/string', 'utm')
+
+    # The frame of the NWU origin
+    property('nwu_frame', '/std/string', 'gps')
+
+    # UTM zone for conversion of WGS84 to UTM
+    property("utm_zone", "int", 32)
+
+    # UTM north for conversion of WGS84 to UTM
+    property("utm_north", "bool", true)
+
+    # Origin in NWU coordinates, that is used for position readings.
+    property("nwu_origin", "/base/Position")
+
+    # Defines how often the task waits for data before entering IO_TIMEOUT (recoverable) and how often the task tries to read data before entering IO_ERROR
+    property("max_error_counter", "int", 10)
+
+    error_states :IO_ERROR
+    states :IO_TIMEOUT
+    periodic 0.1
 end
 
 #task that is using gpsd daemon
-task_context 'GPSDTask' do
-        subclasses 'BaseTask'
-	needs_configuration
+task_context 'GPSDTask', subclasses: 'BaseTask' do
+    needs_configuration
 
-        property("hostname", "string","localhost").
-            doc "hostname where the gps daemon is running"
+    # Hostname where the gps daemon is running
+    property("hostname", "string","localhost")
         
-        #need to be peirodic because there is no FD
-        periodic(0.1)
-
+    # need to be peirodic because there is no FD
+    periodic(0.1)
 end
 
 #task that is using NMEA
-task_context 'MB500Task' do
-        subclasses 'BaseTask'
-	needs_configuration
-	fd_driven
-        required_activity :fd_driven
-	
-	property("device", "/std/string").
-            doc "the device file used to connect to the gps"
-        property("port",   "/std/string").
-            doc "the board port (A, B, C or D) at which we are connected"
-        property("correction_port",   "/std/string").
-            doc "the port (A, B, C, D or a number) at which the board gets correction data note, number means it is getting the correction data s UDP packets to port X"
-        property("period",   "double").
-            doc "the update period"
-        property("fix_threshold", "/gps/MB500_AMBIGUITY_THRESHOLD", :MB500_FIX_99_0).
-            doc "the threshold at which the RTK engine will switch to FIX mode"
-        property("dynamics_model", "/gps/MB500_DYNAMICS_MODEL").
-	    doc "Model of the receiver dynamics" 
-	property("user_dynamics", "/gps/UserDynamics").
-	    doc "If set, the module will put the board in USER_DYNAMICS mode with these values"
-        property("ntpd_shm_unit",   "int", -1).
-            doc "The ntpd shm driver unit to use, -1 for not using one at all. 0 and 1 are reserved for root"
+task_context 'MB500Task', subclasses: 'BaseTask' do
+    needs_configuration
+    fd_driven
+    required_activity :fd_driven
 
-	output_port('constellation', '/gps/ConstellationInfo').
-            doc "the status of the GPS constellation"
+    # The device file used to connect to the gps
+    property("device", "/std/string")
 
-	output_port('time', '/gps/Time').
-            doc "output the real time, cpu time and dgps processing latency"
+    # the board port (A, B, C or D) at which we are connected
+    property("port",   "/std/string")
+
+    # the port (A, B, C, D or a number) at which the board gets correction data note, number means it is getting the correction data s UDP packets to port X
+    property("correction_port",   "/std/string")
+
+    # The update period"
+    property("period",   "double")
+
+    # the threshold at which the RTK engine will switch to FIX mode
+    property("fix_threshold", "/gps/MB500_AMBIGUITY_THRESHOLD", :MB500_FIX_99_0)
+
+    # Model of the receiver dynamics
+    property("dynamics_model", "/gps/MB500_DYNAMICS_MODEL")
+
+    # If set, the module will put the board in USER_DYNAMICS mode with these values
+	property("user_dynamics", "/gps_base/UserDynamics")
+
+	# The ntpd shm driver unit to use, -1 for not using one at all. 0 and 1 are reserved for root
+    property("ntpd_shm_unit",   "int", -1)
+
+    # the status of the GPS constellation
+	output_port('constellation', '/gps_base/ConstellationInfo')
+
+    # output the real time, cpu time and dgps processing latency
+	output_port('time', '/gps_base/Time')
 end

@@ -13,6 +13,7 @@
 #define GPS_BASETASK_TASK_HPP
 
 #include "gps/BaseTaskBase.hpp"
+#include <gps_base/UTMConverter.hpp>
 
 class OGRCoordinateTransformation;
 
@@ -21,14 +22,14 @@ namespace gps {
     {
 	friend class BaseTaskBase;
     protected:
-    	OGRCoordinateTransformation *coTransform;
+    	gps_base::UTMConverter converter;
         base::Time last_update;
 
     protected:
         /*
          * Updates the solution and calculates the position in UTM coordinates
          */
-        void update(const gps::Solution &solution);
+        void update(const gps_base::Solution &solution);
 
     public:
         BaseTask(std::string const& name = "gps::BaseTask", TaskCore::TaskState initial_state = Stopped);
