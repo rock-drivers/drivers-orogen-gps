@@ -72,11 +72,19 @@ void GPSDTask::updateHook()
                 state(RUNNING);
             
             gps_base::Solution solution;
+#if GPSD_API_MAJOR_VERSION >= 9
+            solution.altitude =  pdata->fix.altMSL;
+#else
             solution.altitude =  pdata->fix.altitude;
+#endif
             solution.latitude =  pdata->fix.latitude;
             solution.longitude =  pdata->fix.longitude;
             solution.noOfSatellites =  pdata->satellites_used;
+#if GPSD_API_MAJOR_VERSION >= 9
+            solution.geoidalSeparation = pdata->fix.geoid_sep;
+#else
             solution.geoidalSeparation = pdata->separation;
+#endif
             solution.deviationLongitude = pdata->fix.epx;
             solution.deviationLatitude= pdata->fix.epy;
             solution.deviationAltitude= pdata->fix.epv;
