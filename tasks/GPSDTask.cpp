@@ -108,6 +108,7 @@ void GPSDTask::updateHook()
               solution.positionType = gps_base::DIFFERENTIAL;
               break;
 
+#if GPSD_API_MAJOR_VERSION >= 9
             case STATUS_RTK_FIX:
               solution.positionType = gps_base::RTK_FIXED;
               break;
@@ -115,6 +116,7 @@ void GPSDTask::updateHook()
             case STATUS_RTK_FLT:
               solution.positionType = gps_base::RTK_FLOAT;
               break;
+#endif
 
             default:
               solution.positionType = gps_base::INVALID;
