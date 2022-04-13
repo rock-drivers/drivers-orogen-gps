@@ -91,22 +91,29 @@ void GPSDTask::updateHook()
             solution.time = base::Time::now();
             solution.ageOfDifferentialCorrections = -1;
 
-            switch(pdata->fix.mode)
+            switch(pdata->status)
             {
-            case MODE_NOT_SEEN:
+            case STATUS_NO_FIX:
               solution.positionType = gps_base::NO_SOLUTION;
               break;
             
-            case MODE_NO_FIX:
-              solution.positionType = gps_base::NO_SOLUTION;
+            case STATUS_FIX:
+              if(pdata->fix.mode == MODE_2D){
+                solution.positionType = gps_base::AUTONOMOUS_2D;
+              }else{
+                solution.positionType = gps_base::AUTONOMOUS;
+              }
+              break;
+            case STATUS_DGPS_FIX:
+              solution.positionType = gps_base::DIFFERENTIAL;
               break;
 
-            case MODE_2D:
-              solution.positionType = gps_base::AUTONOMOUS_2D;
+            case STATUS_RTK_FIX:
+              solution.positionType = gps_base::RTK_FIXED;
               break;
 
-            case MODE_3D:
-              solution.positionType = gps_base::AUTONOMOUS;
+            case STATUS_RTK_FLT:
+              solution.positionType = gps_base::RTK_FLOAT;
               break;
 
             default:
