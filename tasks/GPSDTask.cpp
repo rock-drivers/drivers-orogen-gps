@@ -91,7 +91,11 @@ void GPSDTask::updateHook()
             solution.time = base::Time::now();
             solution.ageOfDifferentialCorrections = -1;
 
+#if GPSD_API_MAJOR_VERSION >= 10
+            switch(pdata->fix.status)
+#else
             switch(pdata->status)
+#endif
             {
             case STATUS_NO_FIX:
               solution.positionType = gps_base::NO_SOLUTION;
@@ -121,7 +125,11 @@ void GPSDTask::updateHook()
             default:
               solution.positionType = gps_base::INVALID;
             }
+#if GPSD_API_MAJOR_VERSION >= 10
+            solution.ageOfDifferentialCorrections = (int) pdata->fix.status;
+#else
             solution.ageOfDifferentialCorrections = (int) pdata->status;
+#endif
             update(solution);
             // at the moment no constallation info is saved
             //
