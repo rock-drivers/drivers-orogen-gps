@@ -1,4 +1,14 @@
-#include "GPSDTask.hpp"
+
+// workaround for name clash in 
+// usr/include/mach/policy.h and gpsd/3.15/include/gps.h
+#ifdef __APPLE__
+    #define policy_t mach_policy_t
+    #include "GPSDTask.hpp"
+    #undef policy_t
+#else
+    #include "GPSDTask.hpp"
+#endif
+
 #include <libgpsmm.h>
 
 using namespace gps;
