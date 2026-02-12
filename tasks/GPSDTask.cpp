@@ -130,7 +130,7 @@ void GPSDTask::updateHook()
 #else
             solution.ageOfDifferentialCorrections = (int) pdata->status;
 #endif
-            update(solution);
+            publishSolution(solution);
             // at the moment no constallation info is saved
             //
           }

@@ -29,7 +29,7 @@ namespace gps {
         /*
          * Updates the solution and calculates the position in UTM coordinates
          */
-        void update(const gps_base::Solution &solution);
+        void publishSolution(const gps_base::Solution &solution);
 
     public:
         BaseTask(std::string const& name = "gps::BaseTask", TaskCore::TaskState initial_state = Stopped);

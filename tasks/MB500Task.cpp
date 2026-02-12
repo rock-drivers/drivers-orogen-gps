@@ -240,7 +240,7 @@ void MB500Task::updateHook()
                 solution.deviationLatitude            = driver->errors.deviationLatitude;
                 solution.deviationLongitude           = driver->errors.deviationLongitude;
                 solution.deviationAltitude            = driver->errors.deviationAltitude;
-	        update(solution);	
+	        publishSolution(solution);
              }
 
             if (driver->solutionQuality.time > last_constellation_update &&
