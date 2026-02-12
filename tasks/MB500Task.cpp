@@ -154,7 +154,7 @@ bool MB500Task::configureHook()
                 return false;
             }
         }
-    } catch(iodrivers_base::TimeoutError) {
+    } catch(iodrivers_base::TimeoutError&) {
         RTT::log(Error) << "timeout during board configuration" << RTT::endlog();
         return false;
     }
@@ -253,7 +253,7 @@ void MB500Task::updateHook()
                 last_constellation_update = base::Time::now();
             }
         }
-        catch(iodrivers_base::TimeoutError) {
+        catch(iodrivers_base::TimeoutError&) {
             std::cout << base::Time::now().toMilliseconds() << " got timeout on reading GPS data" << std::endl;
         }
         //std::cout << base::Time::now().toMilliseconds() << " finished reading GPS data" << std::endl;
