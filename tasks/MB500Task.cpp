@@ -65,8 +65,8 @@ int MB500Task::openSocket(std::string const& port)
     }
 
     // Set the socket as nonblocking
-    long fd_flags = fcntl(sfd, F_GETFL);                                                                                             
-    fcntl(sfd, F_SETFL, fd_flags | O_NONBLOCK);                                                                                      
+    long fd_flags = fcntl(sfd, F_GETFL);
+    fcntl(sfd, F_SETFL, fd_flags | O_NONBLOCK);
 
     return sfd;
 }
@@ -101,9 +101,9 @@ bool MB500Task::configureHook()
             int fd = openSocket(correction_input_port);
             if (fd < 0)
                 return false;
-            
+
             socket.reset(fd);
-            
+
             //and tell the board, we are sending the correction data
             correction_input_port = _port;
         }
@@ -137,7 +137,7 @@ bool MB500Task::configureHook()
 		return false;
 	    }
 	}
-            
+
         if(!driver->setRTKInputPort(correction_input_port))
         {
             RTT::log(Error) << "failed to set RTK input port" << RTT::endlog();
@@ -190,7 +190,7 @@ void MB500Task::updateHook()
     if (last_rate_display.isNull())
         last_rate_display= base::Time::now();
     base::Time now = base::Time::now();
-    
+
     RTT::extras::FileDescriptorActivity* fd_activity =
         getActivity<RTT::extras::FileDescriptorActivity>();
 
@@ -211,7 +211,7 @@ void MB500Task::updateHook()
         }
 
     }
-    
+
     if (fd_activity->isUpdated(driver->getFileDescriptor()))
     {
         try {
@@ -220,12 +220,12 @@ void MB500Task::updateHook()
 	    if (!driver->cpu_time.isNull())
 	    {
 	        gps_base::Time time;
-	        time.cpu_time		=driver->cpu_time; 
+	        time.cpu_time		=driver->cpu_time;
 	        time.gps_time		=driver->real_time;
 	        time.processing_latency	=driver->processing_latency;
-	        _time.write(time); 
+	        _time.write(time);
 	    }
-	    
+
             if (last_update < driver->position.time && driver->position.time == driver->errors.time)
             {
                 gps_base::Solution solution;

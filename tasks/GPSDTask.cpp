@@ -65,7 +65,7 @@ void GPSDTask::updateHook()
           counter_waiting = 0;
           gps_data_t* pdata = gpsd_daemon->poll();
 #endif
-          if (pdata) 
+          if (pdata)
           {
             counter_polling = 0;
             if(state() != RUNNING)
@@ -135,12 +135,12 @@ void GPSDTask::updateHook()
             //
           }
           else
-          {         
+          {
               if(++counter_polling > _max_error_counter) {
                     std::cerr << "[Error] poll error" << std::endl;
                     return exception(IO_ERROR);
               } else {
-                    std::cerr << "[Warning] poll error, got wrong values (" << 
+                    std::cerr << "[Warning] poll error, got wrong values (" <<
                         counter_polling << "/" << _max_error_counter << " times)" << std::endl;
                     sleep(1);
               }
@@ -153,7 +153,7 @@ void GPSDTask::updateHook()
               state(IO_TIMEOUT);
         }
         sleep(1);
-      } 
+      }
 }
 
 
