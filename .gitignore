@@ -5,4 +5,5 @@ templates/*
 build/*
 
 *autobuild-stamp
-
+.cache/
+.vscode/c_cpp_properties.json
