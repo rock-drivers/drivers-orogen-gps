@@ -39,7 +39,7 @@ bool BaseTask::startHook()
     return true;
 }
 
-void BaseTask::update(const gps_base::Solution &solution)
+void BaseTask::publishSolution(const gps_base::Solution &solution)
 {
     last_update = solution.time;
     _solution.write(solution);

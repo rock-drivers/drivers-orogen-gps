@@ -29,7 +29,7 @@ namespace gps {
         /*
          * Updates the solution and calculates the position in UTM coordinates
          */
-        void update(const gps_base::Solution &solution);
+        void publishSolution(const gps_base::Solution &solution);
 
     public:
         BaseTask(std::string const& name = "gps::BaseTask", TaskCore::TaskState initial_state = Stopped);
@@ -64,7 +64,7 @@ namespace gps {
          *
          * The warning(), error() and fatal() calls, when called in this hook,
          * allow to get into the associated RunTimeWarning, RunTimeError and
-         * FatalError states. 
+         * FatalError states.
          *
          * In the first case, updateHook() is still called, and recovered()
          * allows you to go back into the Running state.  In the second case,
@@ -74,7 +74,7 @@ namespace gps {
          *
          */
         // void updateHook();
-        
+
 
         /** This hook is called by Orocos when the component is in the
          * RunTimeError state, at each activity step. See the discussion in

@@ -1,4 +1,6 @@
 #include "GPSDTask.hpp"
+#include "gps_base/BaseTypes.hpp"
+#include <gps.h>
 #include <libgpsmm.h>
 
 using namespace gps;
@@ -53,6 +55,90 @@ bool GPSDTask::startHook()
   return true;
 }
 
+int gpsdFixStatus(gps_data_t const& gpsd) {
+#if GPSD_API_MAJOR_VERSION >= 10
+    return gpsd.fix.status;
+#else
+    return gpsd.status;
+#endif
+}
+
+double gpsdFixAltitude(gps_data_t const& gpsd) {
+#if GPSD_API_MAJOR_VERSION >= 9
+    return gpsd.fix.altMSL;
+#else
+    return gpsd.fix.altitude;
+#endif
+}
+
+double gpsdFixGeoidalSeparation(gps_data_t const& gpsd) {
+#if GPSD_API_MAJOR_VERSION >= 9
+    return gpsd.fix.geoid_sep;
+#else
+    return gpsd.fix.separation;
+#endif
+}
+
+#if GPSD_API_MAJOR_VERSION >= 10
+gps_base::GPS_SOLUTION_TYPES gpsdFixPositionType(gps_data_t const& gpsd) {
+  switch(gpsd.fix.mode) {
+    case MODE_NO_FIX:
+      return gps_base::NO_SOLUTION;
+    case MODE_2D:
+      return gps_base::AUTONOMOUS_2D;
+  }
+
+  switch(gpsd.fix.status)
+  {
+  case STATUS_UNK:
+    return gps_base::NO_SOLUTION;
+
+  case STATUS_GPS:
+    return gps_base::AUTONOMOUS;
+  case STATUS_DGPS:
+    return gps_base::DIFFERENTIAL;
+
+  case STATUS_RTK_FIX:
+    return gps_base::RTK_FIXED;
+
+  case STATUS_RTK_FLT:
+    return gps_base::RTK_FLOAT;
+
+  default:
+    return gps_base::INVALID;
+  }
+}
+#else
+gps_base::GPS_SOLUTION_TYPES gpsdFixPositionType(gps_data_t const& gpsd) {
+  auto status = gpsdFixStatus(gpsd);
+  switch(status)
+  {
+  case STATUS_NO_FIX:
+    return gps_base::NO_SOLUTION;
+
+  case STATUS_FIX:
+    if(gpsd.fix.mode == MODE_2D){
+      return gps_base::AUTONOMOUS_2D;
+    } else {
+      return gps_base::AUTONOMOUS;
+    }
+  case STATUS_DGPS_FIX:
+    return gps_base::DIFFERENTIAL;
+
+#if GPSD_API_MAJOR_VERSION >= 9
+  case STATUS_RTK_FIX:
+    return gps_base::RTK_FIXED;
+
+  case STATUS_RTK_FLT:
+    return gps_base::RTK_FLOAT;
+#endif
+
+  default:
+    return gps_base::INVALID;
+  }
+}
+#endif
+
 void GPSDTask::updateHook()
 {
 #if GPSD_API_MAJOR_VERSION >= 5
@@ -65,82 +151,37 @@ void GPSDTask::updateHook()
           counter_waiting = 0;
           gps_data_t* pdata = gpsd_daemon->poll();
 #endif
-          if (pdata) 
+          if (pdata)
           {
             counter_polling = 0;
             if(state() != RUNNING)
                 state(RUNNING);
-            
+
             gps_base::Solution solution;
-#if GPSD_API_MAJOR_VERSION >= 9
-            solution.altitude =  pdata->fix.altMSL;
-#else
-            solution.altitude =  pdata->fix.altitude;
-#endif
+            solution.altitude = gpsdFixAltitude(*pdata);
             solution.latitude =  pdata->fix.latitude;
             solution.longitude =  pdata->fix.longitude;
             solution.noOfSatellites =  pdata->satellites_used;
-#if GPSD_API_MAJOR_VERSION >= 9
-            solution.geoidalSeparation = pdata->fix.geoid_sep;
-#else
-            solution.geoidalSeparation = pdata->separation;
-#endif
+            solution.geoidalSeparation = gpsdFixGeoidalSeparation(*pdata);
             solution.deviationLongitude = pdata->fix.epx;
             solution.deviationLatitude= pdata->fix.epy;
             solution.deviationAltitude= pdata->fix.epv;
             solution.time = base::Time::now();
             solution.ageOfDifferentialCorrections = -1;
 
-#if GPSD_API_MAJOR_VERSION >= 10
-            switch(pdata->fix.status)
-#else
-            switch(pdata->status)
-#endif
-            {
-            case STATUS_NO_FIX:
-              solution.positionType = gps_base::NO_SOLUTION;
-              break;
-            
-            case STATUS_FIX:
-              if(pdata->fix.mode == MODE_2D){
-                solution.positionType = gps_base::AUTONOMOUS_2D;
-              }else{
-                solution.positionType = gps_base::AUTONOMOUS;
-              }
-              break;
-            case STATUS_DGPS_FIX:
-              solution.positionType = gps_base::DIFFERENTIAL;
-              break;
+            solution.positionType = gpsdFixPositionType(*pdata);
 
-#if GPSD_API_MAJOR_VERSION >= 9
-            case STATUS_RTK_FIX:
-              solution.positionType = gps_base::RTK_FIXED;
-              break;
-
-            case STATUS_RTK_FLT:
-              solution.positionType = gps_base::RTK_FLOAT;
-              break;
-#endif
-
-            default:
-              solution.positionType = gps_base::INVALID;
-            }
-#if GPSD_API_MAJOR_VERSION >= 10
-            solution.ageOfDifferentialCorrections = (int) pdata->fix.status;
-#else
-            solution.ageOfDifferentialCorrections = (int) pdata->status;
-#endif
-            update(solution);
+            publishSolution(solution);
             // at the moment no constallation info is saved
             //
           }
           else
-          {         
+          {
               if(++counter_polling > _max_error_counter) {
                     std::cerr << "[Error] poll error" << std::endl;
                     return exception(IO_ERROR);
               } else {
-                    std::cerr << "[Warning] poll error, got wrong values (" << 
+                    std::cerr << "[Warning] poll error, got wrong values (" <<
                         counter_polling << "/" << _max_error_counter << " times)" << std::endl;
                     sleep(1);
               }
@@ -153,7 +194,7 @@ void GPSDTask::updateHook()
               state(IO_TIMEOUT);
         }
         sleep(1);
-      } 
+      }
 }
 
 
