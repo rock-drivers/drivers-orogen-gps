@@ -110,6 +110,13 @@ gps_base::GPS_SOLUTION_TYPES gpsdFixPositionType(gps_data_t const& gpsd) {
 }
 #else
 gps_base::GPS_SOLUTION_TYPES gpsdFixPositionType(gps_data_t const& gpsd) {
+  switch(gpsd.fix.mode) {
+    case MODE_NO_FIX:
+      return gps_base::NO_SOLUTION;
+    case MODE_2D:
+      return gps_base::AUTONOMOUS_2D;
+  }
+
   auto status = gpsdFixStatus(gpsd);
   switch(status)
   {
@@ -117,11 +124,7 @@ gps_base::GPS_SOLUTION_TYPES gpsdFixPositionType(gps_data_t const& gpsd) {
     return gps_base::NO_SOLUTION;
 
   case STATUS_FIX:
-    if(gpsd.fix.mode == MODE_2D){
-      return gps_base::AUTONOMOUS_2D;
-    } else {
-      return gps_base::AUTONOMOUS;
-    }
+    return gps_base::AUTONOMOUS;
   case STATUS_DGPS_FIX:
     return gps_base::DIFFERENTIAL;
 
