@@ -79,7 +79,7 @@ double gpsdFixGeoidalSeparation(gps_data_t const& gpsd) {
 #endif
 }
 
-#if GPSD_API_MAJOR_VERSION >= 10
+#if GPSD_API_MAJOR_VERSION >= 12
 gps_base::GPS_SOLUTION_TYPES gpsdFixPositionType(gps_data_t const& gpsd) {
   switch(gpsd.fix.mode) {
     case MODE_NO_FIX:
